@@ -1,0 +1,6 @@
+@Dipchik_HostAddress = http://localhost:5166
+
+GET {{Dipchik_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
