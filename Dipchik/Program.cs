@@ -1,13 +1,23 @@
+using Serilog.Events;
+using Serilog;
+using Dipchik;
+using Dipchik.Controllers;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+    .MinimumLevel.Override("System", LogEventLevel.Information)
+    .WriteTo.Console()
+    .Enrich.FromLogContext()
+    .CreateLogger();
 
-var app = builder.Build();
+builder.Host.UseSerilog();
+
+var app = builder.ConfigureServices();
 
 app.MapDefaultEndpoints();
 
@@ -19,6 +29,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthorization();
+
+var authEPs = app.MapGroup("/").RequireAuthorization().WithOpenApi();
+var anonEPs = app.MapGroup("/").AllowAnonymous().WithOpenApi();
+
+anonEPs.UserAuthController();
 
 var summaries = new[]
 {
