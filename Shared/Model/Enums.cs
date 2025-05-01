@@ -25,6 +25,12 @@ public enum LocalizationCode
     RUS = 3
 }
 
+public enum EventTypeEnum
+{
+    None = 0,
+    LocationsLocalizationsUpdated = 1,
+}
+
 public static class EnumSwitches
 {
     public static LocalizationCode GetLocalizationCode(string code) => code switch

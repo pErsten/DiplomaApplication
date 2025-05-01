@@ -1,10 +1,12 @@
 ﻿using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Channels;
 using Common.Model.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting.DbContexts;
 using Shared.Model;
+using Shared.Model.Dtos;
 
 namespace Dipchik.Services;
 
@@ -33,25 +35,16 @@ public class GeoNamesCountryDto
     public Dictionary<LocalizationCode, string> Names { get; set; } = new Dictionary<LocalizationCode, string>();
 }
 
-// TODO: move to Shared
-public record class LanguageLocationsDto(int GeoId, string City, string Country);
 
-public class CityLocation
-{
-    public int GeoId { get; set; }
-    public float Latitude { get; set; }
-    public float Longitude {get; set; }
-    public string Name { get; set; }
-    public string CountryCode { get; set; }
-    public Dictionary<LocalizationCode, (string, string)> Names { get; set; } = new Dictionary<LocalizationCode, (string, string)>();
-}
 public class LocationsParser
 {
     private readonly SqlContext dbContext;
+    private readonly ChannelWriter<EventDto> eventProceeder;
 
-    public LocationsParser(SqlContext dbContext)
+    public LocationsParser(SqlContext dbContext, ChannelWriter<EventDto> eventProceeder)
     {
         this.dbContext = dbContext;
+        this.eventProceeder = eventProceeder;
     }
 
     public async Task UpdateLocalizations(CancellationToken stoppingToken = new CancellationToken())
@@ -85,11 +78,12 @@ public class LocationsParser
         }
 
         await dbContext.SaveChangesAsync(stoppingToken);
+        await eventProceeder.WriteAsync(new EventDto(EventTypeEnum.LocationsLocalizationsUpdated, DateTime.UtcNow, data), stoppingToken);
     }
 
-    public async Task<List<CityLocation>> ParseCountries(CancellationToken stoppingToken)
+    public async Task<List<CityLocationDto>> ParseCountries(CancellationToken stoppingToken)
     {
-        var dic = new Dictionary<int, CityLocation>();
+        var dic = new Dictionary<int, CityLocationDto>();
 
         var fileLocation = Path.Combine(Environment.CurrentDirectory, "countryInfo.txt");
         StreamReader countriesReader = new StreamReader(fileLocation);
@@ -117,7 +111,7 @@ public class LocationsParser
 
             if(cityCode != GeoFeatureCode.None)
             {
-                dic[int.Parse(splitArr[0])] = new CityLocation
+                dic[int.Parse(splitArr[0])] = new CityLocationDto
                 {
                     GeoId = int.Parse(splitArr[0]),
                     Latitude = float.Parse(splitArr[4], CultureInfo.InvariantCulture),

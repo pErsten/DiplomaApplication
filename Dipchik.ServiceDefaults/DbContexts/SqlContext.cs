@@ -13,6 +13,7 @@ public class SqlContext : DbContext
 
     public DbSet<Account> Accounts { get; set; }
     public DbSet<Language> Languages { get; set; }
+    public DbSet<AppEvent> Events { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder mb)
