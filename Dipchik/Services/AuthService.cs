@@ -1,9 +1,9 @@
 ﻿using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
+using Common.Model.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting.DbContexts;
-using Shared.Model.Entities;
 
 namespace Dipchik.Services;
 

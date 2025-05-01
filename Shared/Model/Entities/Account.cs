@@ -1,6 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Shared.Model;
+using System.ComponentModel.DataAnnotations;
 
-namespace Shared.Model.Entities;
+namespace Common.Model.Entities;
 
 public class Account
 {
@@ -10,6 +11,7 @@ public class Account
     public string Login { get; set; }
     public string PasswordHash { get; set; }
     public DateTime UtcCreated { get; set; }
+    public AccountRolesEnum Roles { get; set; }
 
 
     public Account() { }

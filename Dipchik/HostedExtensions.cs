@@ -20,6 +20,7 @@ namespace Dipchik
             services.AddDbContext<SqlContext>(options => options.UseNpgsql(sqlConnectionStr));
 
             services.AddScoped<AuthService>();
+            services.AddScoped<LocationsParser>();
             services.AddSingleton<JwtTokenGenerator>();
 
             var jwtKey = builder.Configuration.GetValue<string>("Auth:JwtKey");

@@ -1,8 +1,8 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Common.Model.Entities;
 using Microsoft.IdentityModel.Tokens;
-using Shared.Model.Entities;
 
 namespace Dipchik.Services;
 

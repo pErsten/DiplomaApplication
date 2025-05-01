@@ -31,10 +31,13 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 
-var authEPs = app.MapGroup("/").RequireAuthorization().WithOpenApi();
+// Non auth controllers
 var anonEPs = app.MapGroup("/").AllowAnonymous().WithOpenApi();
-
 anonEPs.UserAuthController();
+
+// Auth controllers
+var authEPs = app.MapGroup("/").RequireAuthorization().WithOpenApi();
+authEPs.UserAdminController();
 
 var summaries = new[]
 {

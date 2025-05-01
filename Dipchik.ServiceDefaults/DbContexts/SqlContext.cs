@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Shared.Model.Entities;
+﻿using Common.Model.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Microsoft.Extensions.Hosting.DbContexts;
 
@@ -12,6 +12,8 @@ public class SqlContext : DbContext
     }
 
     public DbSet<Account> Accounts { get; set; }
+    public DbSet<Language> Languages { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder mb)
     {

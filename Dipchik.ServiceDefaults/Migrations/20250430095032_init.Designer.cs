@@ -25,7 +25,7 @@ namespace Dipchik.ServiceDefaults.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Shared.Model.Entities.Account", b =>
+            modelBuilder.Entity("Common.Model.Entities.Account", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()

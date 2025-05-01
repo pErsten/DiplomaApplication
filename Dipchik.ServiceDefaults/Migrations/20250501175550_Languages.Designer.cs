@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Hosting.DbContexts;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Dipchik.ServiceDefaults.Migrations
 {
     [DbContext(typeof(SqlContext))]
-    partial class SqlContextModelSnapshot : ModelSnapshot
+    [Migration("20250501175550_Languages")]
+    partial class Languages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -66,7 +69,11 @@ namespace Dipchik.ServiceDefaults.Migrations
                     b.Property<int>("Locale")
                         .HasColumnType("integer");
 
-                    b.Property<string>("CitiesAndCountriesJson")
+                    b.Property<string>("CitiesJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CountriesJson")
                         .IsRequired()
                         .HasColumnType("text");
 
