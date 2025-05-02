@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Common.Model.Entities;
 using Microsoft.IdentityModel.Tokens;
+using Shared.Model;
 
 namespace Dipchik.Services;
 
@@ -19,16 +20,17 @@ public class JwtTokenGenerator
     }
 
     public string GenerateJwt(Account account)
-        => GenerateJwt(account.Login, account.AccountId);
+        => GenerateJwt(account.Login, account.AccountId, account.Roles);
 
-    public string GenerateJwt(string login, string accountId)
+    public string GenerateJwt(string login, string accountId, AccountRolesEnum roles)
     {
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, accountId),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(ClaimTypes.Name, accountId),
-            new Claim(ClaimTypes.Surname, login)
+            new Claim(ClaimTypes.Surname, login),
+            new Claim(ClaimTypes.Role, ((int)roles).ToString())
         };
 
         var token = new JwtSecurityToken(

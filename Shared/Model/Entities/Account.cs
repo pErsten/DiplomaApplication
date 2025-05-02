@@ -21,5 +21,6 @@ public class Account
         Login = login;
         AccountId = Guid.NewGuid().ToString();
         UtcCreated = DateTime.UtcNow;
+        Roles = AccountRolesEnum.Client;
     }
 }

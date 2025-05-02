@@ -71,8 +71,7 @@ namespace Dipchik
 
             services.AddAuthorization();
             services.AddSignalR();
-            //TODO: add in configs
-            var webClientUrl = "";//builder.Configuration.GetValue<string>("WebClientUrl");
+            var webClientUrl = builder.Configuration.GetValue<string>("WebClientUrl");
             services.AddCors(options =>
             {
                 options.AddPolicy("WebClient",

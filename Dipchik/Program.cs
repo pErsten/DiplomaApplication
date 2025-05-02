@@ -29,6 +29,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("WebClient");
+app.MapHub<SignalRHub>("/messages");
 app.UseHttpsRedirection();
 app.UseAuthorization();
 
@@ -43,8 +45,5 @@ if (app.Environment.IsDevelopment())
 // Auth controllers
 var authEPs = app.MapGroup("/").RequireAuthorization().WithOpenApi();
 anonEPs.UserAdminController(); //TODO: change back to authEPs
-
-
-app.MapHub<SignalRHub>("/messages");
 
 app.Run();
