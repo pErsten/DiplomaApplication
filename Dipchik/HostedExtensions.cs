@@ -37,6 +37,7 @@ namespace Dipchik
             services.AddScoped<LocationsParser>();
             services.AddSingleton<JwtTokenGenerator>();
             services.AddSingleton<SignalRService>();
+            services.AddSingleton<CacheManager>();
 
             services.AddHostedService<EventProceeder>();
 

@@ -15,14 +15,14 @@ public class EventProceeder : BackgroundService
     private readonly ILogger<EventProceeder> logger;
     private readonly IServiceScopeFactory scopeFactory;
     private readonly ChannelReader<EventDto> eventsChannel;
-    private readonly SignalRService signalRService;
+    private readonly CacheManager cacheManager;
 
-    public EventProceeder(ILoggerFactory loggerFactory, IServiceScopeFactory scopeFactory, ChannelReader<EventDto> eventsChannel, SignalRService signalRService)
+    public EventProceeder(ILoggerFactory loggerFactory, IServiceScopeFactory scopeFactory, ChannelReader<EventDto> eventsChannel, CacheManager cacheManager)
     {
         logger = loggerFactory.CreateLogger<EventProceeder>();
         this.scopeFactory = scopeFactory;
         this.eventsChannel = eventsChannel;
-        this.signalRService = signalRService;
+        this.cacheManager = cacheManager;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -38,7 +38,7 @@ public class EventProceeder : BackgroundService
                 switch (newEvent.EventType, newEvent.EventBody)
                 {
                     case (EventTypeEnum.LocationsLocalizationsUpdated, List<CityLocationDto> dto):
-                        await signalRService.SendLocationLocalizationsUpdate(signalRHub.Clients);
+                        await cacheManager.ClearLocationLocalizationsCache();
 
                         json = JsonSerializer.Serialize(dto);
                         await dbContext.Events.AddAsync(new AppEvent(newEvent, json), stoppingToken);

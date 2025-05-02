@@ -12,8 +12,8 @@ public class SignalRHub : Hub
         this.service = service;
     }
 
-    public async Task LocationLocalizationsUpdate()
-    {
-        await service.GetLocationLocalizationsUpdate(Clients);
-    }
+    //public async Task LocationLocalizationsUpdate()
+    //{
+    //    await service.GetLocationLocalizationsUpdate(Clients);
+    //}
 }

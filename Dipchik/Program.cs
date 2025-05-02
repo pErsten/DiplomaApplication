@@ -35,6 +35,10 @@ app.UseAuthorization();
 // Non auth controllers
 var anonEPs = app.MapGroup("/").AllowAnonymous().WithOpenApi();
 anonEPs.UserAuthController();
+if (app.Environment.IsDevelopment())
+{
+    anonEPs.TestControler();
+}
 
 // Auth controllers
 var authEPs = app.MapGroup("/").RequireAuthorization().WithOpenApi();
@@ -44,8 +48,3 @@ anonEPs.UserAdminController(); //TODO: change back to authEPs
 app.MapHub<SignalRHub>("/messages");
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

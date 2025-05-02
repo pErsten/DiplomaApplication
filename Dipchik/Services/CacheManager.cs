@@ -7,25 +7,39 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting.DbContexts;
+using StackExchange.Redis;
 
 namespace Dipchik.Services;
 
 public class CacheManager
 {
-    private readonly IMemoryCache memCache;
+    private readonly IDatabase redisDB;
+    private readonly IConfiguration configuration;
+    private readonly IConnectionMultiplexer connectionMultiplexer;
     private readonly IServiceScopeFactory scopeFactory;
+    private readonly int localizationsDbInt;
 
-    public CacheManager(IMemoryCache memCache, IServiceScopeFactory scopeFactory)
+    public CacheManager(IConfiguration configuration, IConnectionMultiplexer connectionMultiplexer, IServiceScopeFactory scopeFactory)
     {
-        this.memCache = memCache;
+        localizationsDbInt = configuration.GetValue<int>("Redis:LocalizationsDbInt");
+
+        redisDB = connectionMultiplexer.GetDatabase(localizationsDbInt);
+        this.configuration = configuration;
+        this.connectionMultiplexer = connectionMultiplexer;
         this.scopeFactory = scopeFactory;
     }
 
-    public void ClearLocationLocalizationsCache()
+    public async Task ClearLocationLocalizationsCache()
     {
-        foreach (var enumVal in Enum.GetNames<LocalizationCode>())
+
+        var endpoints = connectionMultiplexer.GetEndPoints();
+        var server = connectionMultiplexer.GetServer(endpoints[0]);
+        
+        var keys = server.Keys(database: localizationsDbInt, pattern: $"{Constants.LOCATION_LOCALIZATION_CACHE_KEY}_*").ToArray();
+
+        foreach (var key in keys)
         {
-            memCache.Remove($"{Constants.LOCATION_LOCALIZATION_CACHE_KEY}_{enumVal}");
+            await redisDB.KeyDeleteAsync(key);
         }
     }
 
@@ -33,13 +47,20 @@ public class CacheManager
     {
         var scope = scopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetService<SqlContext>();
-        return await memCache.GetOrCreateAsync($"{Constants.LOCATION_LOCALIZATION_CACHE_KEY}_{code.ToString()}",
-            async (cacheEntry) =>
-            {
-                cacheEntry.AbsoluteExpiration = DateTime.Now.AddMonths(1);
-                var data = await dbContext.Languages.Where(x => x.Locale == code).Select(x => x.CitiesAndCountriesJson)
-                    .FirstOrDefaultAsync();
-                return JsonSerializer.Deserialize<List<LanguageLocationsDto>>(data).ToDictionary(x => x.GeoId);
-            });
+
+        var transactionRowValue = await redisDB.HashGetAllAsync($"{Constants.LOCATION_LOCALIZATION_CACHE_KEY}_{code.ToString()}");
+        if (transactionRowValue.Any())
+        {
+            return transactionRowValue.ToDictionary(x => int.Parse(x.Name), x => JsonSerializer.Deserialize<LanguageLocationsDto>(x.Value));
+        }
+
+        var data = await dbContext.Languages.Where(x => x.Locale == code).Select(x => x.CitiesAndCountriesJson)
+            .FirstOrDefaultAsync();
+        var list = JsonSerializer.Deserialize<List<LanguageLocationsDto>>(data);
+        await redisDB.HashSetAsync($"{Constants.LOCATION_LOCALIZATION_CACHE_KEY}_{code.ToString()}",
+            list.Select(x => new HashEntry(x.GeoId.ToString(), JsonSerializer.Serialize(x))).ToArray());
+
+        return list.ToDictionary(x => x.GeoId);
+
     }
 }
