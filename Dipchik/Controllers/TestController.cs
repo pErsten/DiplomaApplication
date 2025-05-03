@@ -6,7 +6,7 @@ namespace Dipchik.Controllers;
 
 public static class TestController
 {
-    public static IEndpointRouteBuilder TestControler(this IEndpointRouteBuilder builder)
+    public static IEndpointRouteBuilder AddTestController(this IEndpointRouteBuilder builder)
     {
         var group = builder.MapGroup("Test");
 

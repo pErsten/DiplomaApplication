@@ -22,6 +22,8 @@ public class SqlContext : DbContext
         mb.Entity<Account>().Property(x => x.AccountId).HasMaxLength(50);
         mb.Entity<Account>().HasIndex(x => x.Login).IsUnique();
         mb.Entity<Account>().HasIndex(x => x.AccountId).IsUnique();
+        mb.Entity<Account>().Property(x => x.Username).HasMaxLength(100);
+        mb.Entity<Account>().HasQueryFilter(x => !x.IsDeleted);
 
         base.OnModelCreating(mb);
     }

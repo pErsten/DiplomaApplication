@@ -1,0 +1,117 @@
+﻿@page "/accountedit"
+@using System.Net.Http.Headers
+@using System.Text.Json
+@using System.Web
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IConfiguration Configuration
+@inject IJSRuntime jsRuntime
+
+<MudPaper Class="p-6 max-w-xl mx-auto mt-6" Elevation="6">
+    <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-4">Edit profile</MudText>
+
+    <div class="relative w-32 h-32 mx-auto mb-6 group">
+        <label for="avatarUpload" class="cursor-pointer block">
+            <MudAvatar Size="Size.Large" Image="@AvatarPreviewUrl" Class="w-full h-full rounded-full">
+
+                <MudImage Src="@AvatarPreviewUrl" Size="Size.Large" Class="w-full h-full rounded-full" />
+            </MudAvatar>
+            <div class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <MudIcon Icon="@Icons.Material.Filled.AddAPhoto" Color="Color.Primary" Size="Size.Medium" />
+            </div>
+        </label>
+        <InputFile id="avatarUpload" style="display:none;" OnChange="HandleAvatarUpload" />
+    </div>
+
+    <MudForm @ref="_form">
+        <MudTextField Label="Username" @bind-Value="Username" Required="true" RequiredError="Username is required" />
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="HandleValidSubmit" Type="Submit">Save Changes</MudButton>
+    </MudForm>
+
+    <MudDivider Class="my-6" />
+
+    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="OpenDeleteDialog">
+        Delete Account
+    </MudButton>
+</MudPaper>
+
+<MudDialog @bind-Visible="_deleteDialogOpen">
+    <DialogContent>
+        <MudText Typo="Typo.h6">Are you sure you want to delete your account?</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Default" OnClick="CloseDeleteDialog">Cancel</MudButton>
+        <MudButton Color="Color.Error" OnClick="DeleteAccount">Delete</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    private MudForm _form;
+    private IBrowserFile? _selectedFile;
+    private InputFile? _fileInput;
+
+    private string Username;
+    private string AvatarPreviewUrl = "https://res.cloudinary.com/da7kbbrap/image/upload/360_F_303981738_1s8t2JvUDyfBKsHUmR01LZhEJBsJTgML_itthcj.jpg";
+    private byte[] CustomAvatarBytes = [];
+    private bool _deleteDialogOpen = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Username = globals.User!.Username;
+        if (globals.User.AvatarUrl is not null)
+            AvatarPreviewUrl = globals.User.AvatarUrl;
+    }
+
+    private async Task HandleAvatarUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        await using var stream = file.OpenReadStream();
+        CustomAvatarBytes = new byte[file.Size];
+        await stream.ReadAsync(CustomAvatarBytes);
+        var imageStr = Convert.ToBase64String(CustomAvatarBytes);
+
+        AvatarPreviewUrl = $"data:{file.ContentType};base64,{imageStr}";
+        StateHasChanged();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var serverUrl = Configuration.GetValue<string>("ServerUrl");
+        using var cli = new HttpClient();
+        cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.User!.Token);
+        var response = await cli.PostAsJsonAsync($"{serverUrl}/Account/UpdateUser?Username={Username}", CustomAvatarBytes);
+        if (response.StatusCode != System.Net.HttpStatusCode.OK)
+        {
+            return;
+        }
+        var result = await response.Content.ReadAsStringAsync();
+        var userData = JsonSerializer.Deserialize<AuthenticatedUser>(result, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+        AvatarPreviewUrl = HttpUtility.UrlDecode(userData.AvatarUrl).Trim('\"');
+        await globals.UpdateUser(jsRuntime, userData);
+        Snackbar.Add("Account settings updated", Severity.Success);
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    }
+
+    private void OpenDeleteDialog() => _deleteDialogOpen = true;
+    private void CloseDeleteDialog() => _deleteDialogOpen = false;
+
+    private async Task DeleteAccount()
+    {
+        var serverUrl = Configuration.GetValue<string>("ServerUrl");
+        using var cli = new HttpClient();
+        cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.User!.Token);
+        var response = await cli.GetAsync($"{serverUrl}/Account/DeleteAccount");
+        var result = await response.Content.ReadAsStringAsync();
+        if (response.StatusCode != System.Net.HttpStatusCode.OK)
+        {
+            Snackbar.Add($"Account deletion error - {result}", Severity.Error);
+            return;
+        }
+        Snackbar.Add("Account deleted.", Severity.Warning);
+        globals.Logout(jsRuntime);
+        Navigation.NavigateTo("/");
+    }
+}

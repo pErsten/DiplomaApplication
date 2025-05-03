@@ -1,5 +1,8 @@
 ﻿@page "/login"
 @using System.ComponentModel.DataAnnotations
+@using System.Net.Http.Headers
+@using System.Text.Json
+@using Shared.Model.Dtos
 @inject IConfiguration Configuration
 @inject IJSRuntime jsRuntime
 @inject NavigationManager NavigationManager
@@ -31,7 +34,8 @@
         </MudItem>
     </MudGrid>
 </EditForm>
-@code {
+@code
+{
     RegisterAccountForm model = new RegisterAccountForm();
     bool success;
     string errorMsg;
@@ -60,20 +64,57 @@
     private async Task Authenticate(string endpoint)
     {
         string serverUrl = Configuration.GetValue<string>("ServerUrl");
+
+        var token = await GetToken(serverUrl, endpoint);
+        var accountData = await GetAccountData(serverUrl, token);
+        if (token is null || accountData is null)
+        {
+            errorMsg = "Invalid username or password.";
+            return;
+        }
+
+        await globals.Login(jsRuntime, new AuthenticatedUser
+        {
+            AvatarUrl = accountData.AvatarUrl,
+            Token = token,
+            Username = accountData.Username,
+        });
+
+        success = true;
+        StateHasChanged();
+        NavigationManager.NavigateTo("/");
+    }
+
+    private async Task<string> GetToken(string serverUrl, string endpoint)
+    {
+
         using var cli = new HttpClient();
         var response = await cli.GetAsync($"{serverUrl}/auth/{endpoint}?login={model.Username}&password={model.Password}");
         if (response.StatusCode != System.Net.HttpStatusCode.OK)
         {
             errorMsg = response.ReasonPhrase;
-            return;
+            return null;
         }
 
-        var token = await response.Content.ReadAsStringAsync();
-        await jsRuntime.InvokeAsync<object>("localStorage.setItem", "authToken", token.Trim('"'));
-        await jsRuntime.InvokeAsync<object>("localStorage.setItem", "username", model.Username);
+        return (await response.Content.ReadAsStringAsync()).Trim('"');
+    }
 
-        success = true;
-        NavigationManager.NavigateTo("/");
-        StateHasChanged();
+    private async Task<AccountInfoDto> GetAccountData(string serverUrl, string token)
+    {
+
+        using var cli = new HttpClient();
+        cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var response = await cli.GetAsync($"{serverUrl}/Account/GetAccountInfo");
+        if (response.StatusCode != System.Net.HttpStatusCode.OK)
+        {
+            errorMsg = response.ReasonPhrase;
+            return null;
+        }
+
+        var json = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<AccountInfoDto>(json, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
     }
 }

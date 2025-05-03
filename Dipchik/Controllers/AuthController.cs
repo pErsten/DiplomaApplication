@@ -4,7 +4,7 @@ namespace Dipchik.Controllers;
 
 public static class AuthController
 {
-    public static IEndpointRouteBuilder UserAuthController(this IEndpointRouteBuilder builder)
+    public static IEndpointRouteBuilder AddAuthController(this IEndpointRouteBuilder builder)
     {
         var group = builder.MapGroup("Auth");
 

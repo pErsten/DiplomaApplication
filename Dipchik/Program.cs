@@ -36,14 +36,15 @@ app.UseAuthorization();
 
 // Non auth controllers
 var anonEPs = app.MapGroup("/").AllowAnonymous().WithOpenApi();
-anonEPs.UserAuthController();
+anonEPs.AddAuthController();
 if (app.Environment.IsDevelopment())
 {
-    anonEPs.TestControler();
+    anonEPs.AddTestController();
 }
 
 // Auth controllers
 var authEPs = app.MapGroup("/").RequireAuthorization().WithOpenApi();
-anonEPs.UserAdminController(); //TODO: change back to authEPs
+authEPs.AddAccountController();
+anonEPs.AddAdminController(); //TODO: change to authEPs
 
 app.Run();

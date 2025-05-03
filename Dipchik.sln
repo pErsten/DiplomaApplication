@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dipchik", "Dipchik\Dipchik.csproj", "{EE92B7B9-FB5F-492E-8D69-BAE4395360EB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backend", "Dipchik\Backend.csproj", "{EE92B7B9-FB5F-492E-8D69-BAE4395360EB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dipchik.AppHost", "Dipchik.AppHost\Dipchik.AppHost.csproj", "{81F336A0-2438-40AA-A200-34D6EF93C3DC}"
 EndProject

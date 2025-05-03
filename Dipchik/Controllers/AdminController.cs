@@ -4,7 +4,7 @@ namespace Dipchik.Controllers;
 
 public static class AdminController
 {
-    public static IEndpointRouteBuilder UserAdminController(this IEndpointRouteBuilder builder)
+    public static IEndpointRouteBuilder AddAdminController(this IEndpointRouteBuilder builder)
     {
         var group = builder.MapGroup("Admin");
 

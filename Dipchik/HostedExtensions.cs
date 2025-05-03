@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using System.Threading.Channels;
+using CloudinaryDotNet;
 using Dipchik.BackgroundWorkers;
 using Dipchik.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -29,15 +30,23 @@ namespace Dipchik
             services.AddSingleton(eventsChannel.Reader);
 
             var sqlConnectionStr = builder.Configuration.GetValue<string>("Databases:SqlConnection");
+            var redisConnectionStr = builder.Configuration.GetValue<string>("Databases:RedisConnection"); ;
+            var cloudinaryConnectionStr = builder.Configuration.GetValue<string>("Databases:CloudinaryConnection"); ;
+
+            services.AddSignalR().AddStackExchangeRedis(redisConnectionStr);
             services.AddDbContext<SqlContext>(options => options.UseNpgsql(sqlConnectionStr));
-
-            services.AddSignalR().AddStackExchangeRedis("redis:6379");
-
             services.AddScoped<AuthService>();
             services.AddScoped<LocationsParser>();
+            services.AddSingleton<Cloudinary>(x =>
+            {
+                var elem = new Cloudinary(cloudinaryConnectionStr);
+                elem.Api.Secure = true;
+                return elem;
+            });
             services.AddSingleton<JwtTokenGenerator>();
             services.AddSingleton<SignalRService>();
             services.AddSingleton<CacheManager>();
+            services.AddHttpContextAccessor();
 
             services.AddHostedService<EventProceeder>();
 
