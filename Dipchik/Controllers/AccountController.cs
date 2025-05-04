@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting.DbContexts;
 using Npgsql.BackendMessages;
+using Shared.Model;
 using Shared.Model.Dtos;
 
 namespace Dipchik.Controllers;
@@ -22,7 +23,7 @@ public static class AccountController
         return builder;
     }
 
-    public static async Task<IResult> UpdateUser([FromBody]byte[] imageBytes, string Username, HttpContext context, SqlContext dbContext, Cloudinary cloudinary, CancellationToken stoppingToken)
+    public static async Task<IResult> UpdateUser([FromBody]byte[] imageBytes, string Username, string localCode, HttpContext context, SqlContext dbContext, Cloudinary cloudinary, CancellationToken stoppingToken)
     {
         var accountId = context.UserId();
         var account = await dbContext.Accounts.FirstOrDefaultAsync(x => x.AccountId == accountId, stoppingToken);
@@ -50,12 +51,24 @@ public static class AccountController
         }
         
         account.Username = Username;
+        if (!Enum.TryParse<LocalizationCode>(localCode, out var localization))
+        {
+            return Results.BadRequest("Bad localization code provided");
+        }
+
+        if (localization == LocalizationCode.None)
+        {
+            return Results.BadRequest("Localization can't be None");
+        }
+
+        account.Locale = localization;
         await dbContext.SaveChangesAsync(stoppingToken);
         return Results.Ok(new AccountInfoDto
         {
             AvatarUrl = account.AvatarUrl,
             Username = Username,
-            Roles = account.Roles
+            Roles = account.Roles,
+            Locale = account.Locale
         });
     }
 
@@ -72,7 +85,8 @@ public static class AccountController
         {
             AvatarUrl = account.AvatarUrl,
             Username = account.Username,
-            Roles = account.Roles
+            Roles = account.Roles,
+            Locale = account.Locale
         });
     }
 

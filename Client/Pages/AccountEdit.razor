@@ -2,6 +2,7 @@
 @using System.Net.Http.Headers
 @using System.Text.Json
 @using System.Web
+@using Shared.Model
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IConfiguration Configuration
@@ -25,6 +26,14 @@
 
     <MudForm @ref="_form">
         <MudTextField Label="Username" @bind-Value="Username" Required="true" RequiredError="Username is required" />
+
+        <MudSelect @bind-Value="Locale" Label="Select Language" OpenIcon="@Icons.Material.Filled.Language" AdornmentColor="Color.Secondary">
+            @foreach (var item in Enum.GetValues<LocalizationCode>()) {
+                if (item == LocalizationCode.None)
+                    continue;
+                <MudSelectItem Value="@item">@item.ToString()</MudSelectItem>
+            }
+        </MudSelect>
 
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="HandleValidSubmit" Type="Submit">Save Changes</MudButton>
     </MudForm>
@@ -51,6 +60,7 @@
     private InputFile? _fileInput;
 
     private string Username;
+    private LocalizationCode Locale = LocalizationCode.ENG;
     private string AvatarPreviewUrl = "https://res.cloudinary.com/da7kbbrap/image/upload/360_F_303981738_1s8t2JvUDyfBKsHUmR01LZhEJBsJTgML_itthcj.jpg";
     private byte[] CustomAvatarBytes = [];
     private bool _deleteDialogOpen = false;
@@ -58,6 +68,7 @@
     protected override async Task OnInitializedAsync()
     {
         Username = globals.User!.Username;
+        Locale = globals.User.Locale;
         if (globals.User.AvatarUrl is not null)
             AvatarPreviewUrl = globals.User.AvatarUrl;
     }
@@ -79,12 +90,13 @@
         var serverUrl = Configuration.GetValue<string>("ServerUrl");
         using var cli = new HttpClient();
         cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.User!.Token);
-        var response = await cli.PostAsJsonAsync($"{serverUrl}/Account/UpdateUser?Username={Username}", CustomAvatarBytes);
+        var response = await cli.PostAsJsonAsync($"{serverUrl}/Account/UpdateUser?Username={Username}&localCode={Locale}", CustomAvatarBytes);
+        var result = await response.Content.ReadAsStringAsync();
         if (response.StatusCode != System.Net.HttpStatusCode.OK)
         {
+            Snackbar.Add($"Error on update - {result}", Severity.Error);
             return;
         }
-        var result = await response.Content.ReadAsStringAsync();
         var userData = JsonSerializer.Deserialize<AuthenticatedUser>(result, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true

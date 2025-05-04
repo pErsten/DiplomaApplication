@@ -40,6 +40,7 @@ public class Globals
         User.AvatarUrl = user.AvatarUrl;
         User.Username = user.Username;
         User.Roles = user.Roles;
+        User.Locale = user.Locale;
         await jsRuntime.InvokeAsync<string>("localStorage.setItem", "userData", JsonSerializer.Serialize(User));
         Notify();
     }
@@ -51,6 +52,7 @@ public class AuthenticatedUser
     public string? Token { get; set; } = null;
     public string? AvatarUrl { get; set; } = null;
     public AccountRolesEnum Roles { get; set; }
+    public LocalizationCode Locale { get; set; }
 
     public bool HasRole(AccountRolesEnum role)
         => (Roles & role) > 0;
