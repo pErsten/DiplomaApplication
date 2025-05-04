@@ -9,39 +9,50 @@
 @inject IConfiguration Configuration
 @inject IJSRuntime jsRuntime
 
-<MudPaper Class="p-6 max-w-xl mx-auto mt-6" Elevation="6">
+<MudPaper Class="max-w-xl mx-auto pa-10" Elevation="6">
     <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-4">@globals.Localizations["AccountEdit_Title"]</MudText>
+    
+    <div>
+        
+        <MudForm @ref="_form">
+            <div class="d-flex flex-grow-1">
+                <div class="mr-15">
+                    <label for="avatarUpload" class="block">
+                        <MudAvatar @onmouseenter=@(() => showOverlay = true) @onmouseleave=@(() => showOverlay = false) Size="Size.Large" Image="@AvatarPreviewUrl" Style="height:200px;width:200px" Class="w-full h-full rounded-full cursor-pointer object-cover">
+                            <MudImage Src="@AvatarPreviewUrl" Size="Size.Large" Class="w-full h-full rounded-full cursor-pointer"/>
+                            <MudOverlay Visible="showOverlay" Absolute=true Class="cursor-pointer" LightBackground/>
+                            @if (showOverlay)
+                            {
+                                <MudIcon @bind-Visible="showOverlay" Icon="@Icons.Material.Filled.Add" Color="Color.Dark" Size="Size.Large" Class="absolute cursor-pointer z-100"/>
+                            }
+                        </MudAvatar>
+                    </label>
+                    <InputFile id="avatarUpload" style="display:none;" OnChange="HandleAvatarUpload" accept="image/x-png,image/jpeg"/>
+                </div>
+                <div class="flex-1">
+                    <MudTextField Label=@globals.Localizations["AccountEdit_Username"]  @bind-Value="Username" Required="true" RequiredError=@globals.Localizations["AccountEdit_UsernameIsRequired"]/>
 
-    <div class="relative w-32 h-32 mx-auto mb-6 group">
-        <label for="avatarUpload" class="cursor-pointer block">
-            <MudAvatar Size="Size.Large" Image="@AvatarPreviewUrl" Class="w-full h-full rounded-full">
-
-                <MudImage Src="@AvatarPreviewUrl" Size="Size.Large" Class="w-full h-full rounded-full" />
-            </MudAvatar>
-            <div class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <MudIcon Icon="@Icons.Material.Filled.AddAPhoto" Color="Color.Primary" Size="Size.Medium" />
+                    <MudSelect @bind-Value="Locale" Class="mt-3" Label=@globals.Localizations["AccountEdit_SelectLanguage"] OpenIcon="@Icons.Material.Filled.Language" AdornmentColor="Color.Secondary">
+                        @foreach (var item in Enum.GetValues<LocalizationCode>())
+                        {
+                            if (item == LocalizationCode.None)
+                                continue;
+                            <MudSelectItem Value="@item">@item.ToString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
             </div>
-        </label>
-        <InputFile id="avatarUpload" style="display:none;" OnChange="HandleAvatarUpload" />
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="HandleValidSubmit" Type="Submit">
+                @globals.Localizations["UI_SaveChanges"]
+            </MudButton>
+        </MudForm>
     </div>
 
-    <MudForm @ref="_form">
-        <MudTextField Label=@globals.Localizations["AccountEdit_Username"] @bind-Value="Username" Required="true" RequiredError=@globals.Localizations["AccountEdit_UsernameIsRequired"] />
 
-        <MudSelect @bind-Value="Locale" Label=@globals.Localizations["AccountEdit_SelectLanguage"] OpenIcon="@Icons.Material.Filled.Language" AdornmentColor="Color.Secondary">
-            @foreach (var item in Enum.GetValues<LocalizationCode>()) {
-                if (item == LocalizationCode.None)
-                    continue;
-                <MudSelectItem Value="@item">@item.ToString()</MudSelectItem>
-            }
-        </MudSelect>
+    <MudDivider />
 
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="HandleValidSubmit" Type="Submit">@globals.Localizations["UI_SaveChanges"]</MudButton>
-    </MudForm>
-
-    <MudDivider Class="my-6" />
-
-    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="OpenDeleteDialog">
+    <MudButton Variant="Variant.Outlined" Color="Color.Error" Class="mt-4" OnClick="OpenDeleteDialog">
         @globals.Localizations["AccountEdit_DeleteAccount"]
     </MudButton>
 </MudPaper>
@@ -56,6 +67,8 @@
     </DialogActions>
 </MudDialog>
 @code {
+    private bool showOverlay = false;
+
     private MudForm _form;
     private IBrowserFile? _selectedFile;
     private InputFile? _fileInput;
