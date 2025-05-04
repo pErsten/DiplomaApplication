@@ -7,11 +7,11 @@
 @inject IConfiguration Configuration
 
 <MudPaper Class="p-4 max-w-7xl mx-auto mt-4 shadow-md">
-    <MudText Typo="Typo.h5">Localization Manager</MudText>
+    <MudText Typo="Typo.h5">@globals.Localizations["LocalizationManager_Title"]</MudText>
 
     <MudTable Items="@Entries" Hover="true" Bordered="true" Class="mt-4">
         <HeaderContent>
-            <MudTh>Placeholder</MudTh>
+            <MudTh>@globals.Localizations["LocalizationManager_Placeholder"]</MudTh>
             @foreach (var lang in Languages)
             {
                 <MudTh>@lang.ToUpper()</MudTh>
@@ -35,11 +35,11 @@
     </MudTable>
 
     <MudButton Class="mt-4" Variant="Variant.Outlined" OnClick="AddRow">
-        <MudIcon Icon="@Icons.Material.Filled.Add" /> Add Row
+        <MudIcon Icon="@Icons.Material.Filled.Add" /> @globals.Localizations["LocalizationManager_AddRow"]
     </MudButton>
 
     <MudButton Class="mt-4 ml-2" Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAll">
-        <MudIcon Icon="@Icons.Material.Filled.Save" /> Save Changes
+        <MudIcon Icon="@Icons.Material.Filled.Save" /> @globals.Localizations["UI_SaveChanges"]
     </MudButton>
 </MudPaper>
 
@@ -52,14 +52,14 @@
     {
         var serverUrl = Configuration.GetValue<string>("ServerUrl");
         using var cli = new HttpClient();
-        cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.User!.Token);
+        cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.Token);
         var response = await cli.GetAsync($"{serverUrl}/admin/getAllDisplayLocalizations");
+        var result = await response.Content.ReadAsStringAsync();
         if (response.StatusCode != System.Net.HttpStatusCode.OK)
         {
-            Snackbar.Add("Failed to get data", Severity.Error);
+            Snackbar.Add($"{@globals.Localizations["Messages_FailedToGetData"]} - {result}", Severity.Error);
             return;
         }
-        var result = await response.Content.ReadAsStringAsync();
         Entries = JsonSerializer.Deserialize<List<LocalizationManagerDto>>(result, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -87,15 +87,16 @@
     {
         var serverUrl = Configuration.GetValue<string>("ServerUrl");
         using var cli = new HttpClient();
-        cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.User!.Token);
+        cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.Token);
         var response = await cli.PostAsJsonAsync($"{serverUrl}/admin/updateDisplayLocalizations", Entries);
         if (response.IsSuccessStatusCode)
         {
-            Snackbar.Add("Changes saved!", Severity.Success);
+            Snackbar.Add(@globals.Localizations["Messages_ChangesSaved"], Severity.Success);
         }
         else
         {
-            Snackbar.Add("Failed to save changes", Severity.Error);
+            var result = await response.Content.ReadAsStringAsync();
+            Snackbar.Add($"{@globals.Localizations["Messages_FailedToSaveChanges"]} - {result}", Severity.Error);
         }
     }
 }

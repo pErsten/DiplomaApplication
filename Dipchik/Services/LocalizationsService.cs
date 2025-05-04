@@ -69,6 +69,7 @@ public class LocalizationsService
         }
 
         await dbContext.SaveChangesAsync(stoppingToken);
+        await eventProceeder.WriteAsync(new EventDto(EventTypeEnum.DisplayLocalizationsUpdated, DateTime.UtcNow, data), stoppingToken);
     }
     public async Task UpdateLocaleLocalizations(CancellationToken stoppingToken)
     {

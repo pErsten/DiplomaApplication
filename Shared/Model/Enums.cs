@@ -29,6 +29,7 @@ public enum EventTypeEnum
 {
     None = 0,
     LocationsLocalizationsUpdated = 1,
+    DisplayLocalizationsUpdated = 2,
 }
 
 public static class EnumSwitches

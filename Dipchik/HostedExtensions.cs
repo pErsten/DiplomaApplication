@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting.DbContexts;
 using Microsoft.IdentityModel.Tokens;
 using Shared.Model;
 using Shared.Model.Dtos;
+using StackExchange.Redis;
 
 namespace Dipchik
 {
@@ -33,7 +34,9 @@ namespace Dipchik
             var sqlConnectionStr = builder.Configuration.GetValue<string>("Databases:SqlConnection");
             var redisConnectionStr = builder.Configuration.GetValue<string>("Databases:RedisConnection"); ;
             var cloudinaryConnectionStr = builder.Configuration.GetValue<string>("Databases:CloudinaryConnection"); ;
-
+            
+            builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+                ConnectionMultiplexer.Connect(redisConnectionStr));
             services.AddSignalR().AddStackExchangeRedis(redisConnectionStr);
             services.AddDbContext<SqlContext>(options => options.UseNpgsql(sqlConnectionStr));
             services.AddScoped<AuthService>();

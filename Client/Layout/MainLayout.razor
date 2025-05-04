@@ -26,17 +26,17 @@
                         <MudImage Src=@globals.User!.AvatarUrl></MudImage>
                     </MudAvatar>
                 }
-                <MudText Class="ml-2">@($"Welcome back, {globals.User!.Username}!")</MudText>
+                <MudText Class="ml-2">@($"{@globals.Localizations["UI_WelcomeBack"]}, {globals.User!.Username}!")</MudText>
 
                 <NavLink class="nav-link" href="accountedit" Match="NavLinkMatch.All">
-                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Edit
+                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> @globals.Localizations["UI_Edit"]
                 </NavLink>
-                <MudLink OnClick="Logout">Log out</MudLink>
+                <MudLink OnClick="Logout">@globals.Localizations["UI_Logout"]</MudLink>
             }
             else
             {
                 <NavLink class="nav-link" href="login" Match="NavLinkMatch.All">
-                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Login
+                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> @globals.Localizations["UI_Login"]
                 </NavLink>
             }
         </div>

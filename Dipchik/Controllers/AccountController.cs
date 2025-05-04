@@ -23,7 +23,7 @@ public static class AccountController
         return builder;
     }
 
-    public static async Task<IResult> UpdateUser([FromBody]byte[] imageBytes, string Username, string localCode, HttpContext context, SqlContext dbContext, Cloudinary cloudinary, CancellationToken stoppingToken)
+    public static async Task<IResult> UpdateUser([FromBody]byte[] imageBytes, string Username, string localeCode, HttpContext context, SqlContext dbContext, Cloudinary cloudinary, CancellationToken stoppingToken)
     {
         var accountId = context.UserId();
         var account = await dbContext.Accounts.FirstOrDefaultAsync(x => x.AccountId == accountId, stoppingToken);
@@ -51,7 +51,7 @@ public static class AccountController
         }
         
         account.Username = Username;
-        if (!Enum.TryParse<LocalizationCode>(localCode, out var localization))
+        if (!Enum.TryParse<LocalizationCode>(localeCode, out var localization))
         {
             return Results.BadRequest("Bad localization code provided");
         }
@@ -63,13 +63,7 @@ public static class AccountController
 
         account.Locale = localization;
         await dbContext.SaveChangesAsync(stoppingToken);
-        return Results.Ok(new AccountInfoDto
-        {
-            AvatarUrl = account.AvatarUrl,
-            Username = Username,
-            Roles = account.Roles,
-            Locale = account.Locale
-        });
+        return Results.Ok(new AccountInfoDto(account));
     }
 
     public static async Task<IResult> GetAccountInfo(HttpContext context, SqlContext dbContext, CancellationToken stoppingToken)
@@ -81,13 +75,7 @@ public static class AccountController
             return Results.BadRequest("Account not found");
         }
         
-        return Results.Ok(new AccountInfoDto
-        {
-            AvatarUrl = account.AvatarUrl,
-            Username = account.Username,
-            Roles = account.Roles,
-            Locale = account.Locale
-        });
+        return Results.Ok(new AccountInfoDto(account));
     }
 
     public static async Task<IResult> DeleteAccount(HttpContext context, SqlContext dbContext, CancellationToken stoppingToken)

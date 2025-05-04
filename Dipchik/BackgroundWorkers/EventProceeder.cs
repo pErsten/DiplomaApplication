@@ -37,10 +37,17 @@ public class EventProceeder : BackgroundService
                 string json = string.Empty;
                 switch (newEvent.EventType, newEvent.EventBody)
                 {
-                    case (EventTypeEnum.LocationsLocalizationsUpdated, List<CityLocationDto> dto):
+                    case (EventTypeEnum.LocationsLocalizationsUpdated, List<CityLocationDto> data):
                         await cacheManager.ClearLocationLocalizationsCache();
 
-                        json = JsonSerializer.Serialize(dto);
+                        json = JsonSerializer.Serialize(data);
+                        await dbContext.Events.AddAsync(new AppEvent(newEvent, json), stoppingToken);
+                        await dbContext.SaveChangesAsync(stoppingToken);
+                        break;
+                    case (EventTypeEnum.DisplayLocalizationsUpdated, Dictionary<LocalizationCode, Dictionary<string, string>> data):
+                        await cacheManager.ClearDisplayLocalizationsCache();
+
+                        json = JsonSerializer.Serialize(data);
                         await dbContext.Events.AddAsync(new AppEvent(newEvent, json), stoppingToken);
                         await dbContext.SaveChangesAsync(stoppingToken);
                         break;

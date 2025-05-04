@@ -73,14 +73,7 @@
             return;
         }
 
-        await globals.Login(jsRuntime, new AuthenticatedUser
-        {
-            AvatarUrl = accountData.AvatarUrl,
-            Token = token,
-            Roles = accountData.Roles,
-            Locale = accountData.Locale,
-            Username = accountData.Username,
-        });
+        await globals.Login(jsRuntime, accountData, token);
 
         success = true;
         StateHasChanged();

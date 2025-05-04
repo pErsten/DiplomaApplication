@@ -3,13 +3,14 @@
 @using System.Text.Json
 @using System.Web
 @using Shared.Model
+@using Shared.Model.Dtos
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IConfiguration Configuration
 @inject IJSRuntime jsRuntime
 
 <MudPaper Class="p-6 max-w-xl mx-auto mt-6" Elevation="6">
-    <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-4">Edit profile</MudText>
+    <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-4">@globals.Localizations["AccountEdit_Title"]</MudText>
 
     <div class="relative w-32 h-32 mx-auto mb-6 group">
         <label for="avatarUpload" class="cursor-pointer block">
@@ -25,9 +26,9 @@
     </div>
 
     <MudForm @ref="_form">
-        <MudTextField Label="Username" @bind-Value="Username" Required="true" RequiredError="Username is required" />
+        <MudTextField Label=@globals.Localizations["AccountEdit_Username"] @bind-Value="Username" Required="true" RequiredError=@globals.Localizations["AccountEdit_UsernameIsRequired"] />
 
-        <MudSelect @bind-Value="Locale" Label="Select Language" OpenIcon="@Icons.Material.Filled.Language" AdornmentColor="Color.Secondary">
+        <MudSelect @bind-Value="Locale" Label=@globals.Localizations["AccountEdit_SelectLanguage"] OpenIcon="@Icons.Material.Filled.Language" AdornmentColor="Color.Secondary">
             @foreach (var item in Enum.GetValues<LocalizationCode>()) {
                 if (item == LocalizationCode.None)
                     continue;
@@ -35,23 +36,23 @@
             }
         </MudSelect>
 
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="HandleValidSubmit" Type="Submit">Save Changes</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="HandleValidSubmit" Type="Submit">@globals.Localizations["UI_SaveChanges"]</MudButton>
     </MudForm>
 
     <MudDivider Class="my-6" />
 
     <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="OpenDeleteDialog">
-        Delete Account
+        @globals.Localizations["AccountEdit_DeleteAccount"]
     </MudButton>
 </MudPaper>
 
 <MudDialog @bind-Visible="_deleteDialogOpen">
     <DialogContent>
-        <MudText Typo="Typo.h6">Are you sure you want to delete your account?</MudText>
+        <MudText Typo="Typo.h6">@globals.Localizations["AccountEdit_PromptDeleteMsg"]</MudText>
     </DialogContent>
     <DialogActions>
-        <MudButton Color="Color.Default" OnClick="CloseDeleteDialog">Cancel</MudButton>
-        <MudButton Color="Color.Error" OnClick="DeleteAccount">Delete</MudButton>
+        <MudButton Color="Color.Default" OnClick="CloseDeleteDialog">@globals.Localizations["UI_Cancel"]</MudButton>
+        <MudButton Color="Color.Error" OnClick="DeleteAccount">@globals.Localizations["UI_Delete"]</MudButton>
     </DialogActions>
 </MudDialog>
 @code {
@@ -89,21 +90,21 @@
     {
         var serverUrl = Configuration.GetValue<string>("ServerUrl");
         using var cli = new HttpClient();
-        cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.User!.Token);
-        var response = await cli.PostAsJsonAsync($"{serverUrl}/Account/UpdateUser?Username={Username}&localCode={Locale}", CustomAvatarBytes);
+        cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.Token);
+        var response = await cli.PostAsJsonAsync($"{serverUrl}/Account/UpdateUser?Username={Username}&localeCode={Locale}", CustomAvatarBytes);
         var result = await response.Content.ReadAsStringAsync();
         if (response.StatusCode != System.Net.HttpStatusCode.OK)
         {
-            Snackbar.Add($"Error on update - {result}", Severity.Error);
+            Snackbar.Add($"{@globals.Localizations["Messages_ErrorOnUpdate"]} - {result}", Severity.Error);
             return;
         }
-        var userData = JsonSerializer.Deserialize<AuthenticatedUser>(result, new JsonSerializerOptions
+        var userData = JsonSerializer.Deserialize<AccountInfoDto>(result, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
         AvatarPreviewUrl = HttpUtility.UrlDecode(userData.AvatarUrl).Trim('\"');
         await globals.UpdateUser(jsRuntime, userData);
-        Snackbar.Add("Account settings updated", Severity.Success);
+        Snackbar.Add(@globals.Localizations["Messages_AccountSettingsUpdated"], Severity.Success);
     }
 
     private void OpenDeleteDialog() => _deleteDialogOpen = true;
@@ -113,15 +114,15 @@
     {
         var serverUrl = Configuration.GetValue<string>("ServerUrl");
         using var cli = new HttpClient();
-        cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.User!.Token);
+        cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.Token);
         var response = await cli.GetAsync($"{serverUrl}/Account/DeleteAccount");
         var result = await response.Content.ReadAsStringAsync();
         if (response.StatusCode != System.Net.HttpStatusCode.OK)
         {
-            Snackbar.Add($"Account deletion error - {result}", Severity.Error);
+            Snackbar.Add($"{@globals.Localizations["Messages_AccountDeletionError"]}- {result}", Severity.Error);
             return;
         }
-        Snackbar.Add("Account deleted.", Severity.Warning);
+        Snackbar.Add(@globals.Localizations["Messages_AccountDeleted"], Severity.Warning);
         globals.Logout(jsRuntime);
         Navigation.NavigateTo("/");
     }

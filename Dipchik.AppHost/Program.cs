@@ -1,6 +1,6 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var redis = builder.AddRedis("cache", 6379);
+var redis = builder.AddRedis("cache");
 var postgres = builder.AddPostgres("sql");
 var backend = builder.AddProject<Projects.Backend>("backend")
     .WithReference(redis)

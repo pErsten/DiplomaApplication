@@ -42,6 +42,19 @@ public class CacheManager
             await redisDB.KeyDeleteAsync(key);
         }
     }
+    public async Task ClearDisplayLocalizationsCache()
+    {
+
+        var endpoints = connectionMultiplexer.GetEndPoints();
+        var server = connectionMultiplexer.GetServer(endpoints[0]);
+        
+        var keys = server.Keys(database: localizationsDbInt, pattern: $"{Constants.DISPLAY_LOCALIZATION_CACHE_KEY}_*").ToArray();
+
+        foreach (var key in keys)
+        {
+            await redisDB.KeyDeleteAsync(key);
+        }
+    }
 
     public async Task<Dictionary<int, LanguageLocationsDto>> GetLocationLocalizations(LocalizationCode code)
     {
@@ -61,6 +74,24 @@ public class CacheManager
             list.Select(x => new HashEntry(x.GeoId.ToString(), JsonSerializer.Serialize(x))).ToArray());
 
         return list.ToDictionary(x => x.GeoId);
+    }
 
+    public async Task<Dictionary<string, string>> GetDisplayLocalizations(LocalizationCode code, CancellationToken stoppingToken)
+    {
+        var scope = scopeFactory.CreateScope();
+        var dbContext = scope.ServiceProvider.GetService<SqlContext>();
+
+        var transactionRowValue = await redisDB.HashGetAllAsync($"{Constants.DISPLAY_LOCALIZATION_CACHE_KEY}_{code.ToString()}");
+        if (transactionRowValue.Any())
+        {
+            return transactionRowValue.ToDictionary(x => x.Name.ToString(), x => x.Value.ToString());
+        }
+
+        var data = await dbContext.Languages.Where(x => x.Locale == code).Select(x => x.DisplayLocalizationsJson).FirstOrDefaultAsync(stoppingToken);
+        var list = JsonSerializer.Deserialize<Dictionary<string, string>>(data);
+        await redisDB.HashSetAsync($"{Constants.DISPLAY_LOCALIZATION_CACHE_KEY}_{code.ToString()}",
+            list.Select(x => new HashEntry(x.Key, x.Value)).ToArray());
+
+        return list.ToDictionary(x => x.Key, x => x.Value);
     }
 }
