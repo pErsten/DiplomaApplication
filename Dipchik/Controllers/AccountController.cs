@@ -43,7 +43,7 @@ public static class AccountController
             var uploadResult = cloudinary.Upload(uploadParams);
             if (uploadResult.Url is null)
             {
-                return Results.BadRequest();
+                return Results.BadRequest("Failed to upload image to CDN");
             }
 
             account.AvatarUrl = uploadResult.Url.OriginalString;
@@ -54,7 +54,8 @@ public static class AccountController
         return Results.Ok(new AccountInfoDto
         {
             AvatarUrl = account.AvatarUrl,
-            Username = Username
+            Username = Username,
+            Roles = account.Roles
         });
     }
 
@@ -70,7 +71,8 @@ public static class AccountController
         return Results.Ok(new AccountInfoDto
         {
             AvatarUrl = account.AvatarUrl,
-            Username = account.Username
+            Username = account.Username,
+            Roles = account.Roles
         });
     }
 

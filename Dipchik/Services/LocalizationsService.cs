@@ -36,18 +36,41 @@ public class GeoNamesCountryDto
 }
 
 
-public class LocationsParser
+public class LocalizationsService
 {
     private readonly SqlContext dbContext;
     private readonly ChannelWriter<EventDto> eventProceeder;
 
-    public LocationsParser(SqlContext dbContext, ChannelWriter<EventDto> eventProceeder)
+    public LocalizationsService(SqlContext dbContext, ChannelWriter<EventDto> eventProceeder)
     {
         this.dbContext = dbContext;
         this.eventProceeder = eventProceeder;
     }
 
-    public async Task UpdateLocalizations(CancellationToken stoppingToken = new CancellationToken())
+    public record class LanguageDisplayDto(LocalizationCode locale, string placeholder, string value);
+
+    public async Task<Dictionary<LocalizationCode, Dictionary<string, string>>> GetAllDisplayLocalizations(CancellationToken stoppingToken)
+    {
+        var data = await dbContext.Languages.Select(x => new KeyValuePair<LocalizationCode, string>(x.Locale, x.DisplayLocalizationsJson)).ToListAsync(stoppingToken);
+        var result = data.ToDictionary(x => x.Key,
+            x => JsonSerializer.Deserialize<Dictionary<string, string>>(x.Value));
+        
+        return result;
+    }
+
+    public async Task UpdateDisplayLocalizations(Dictionary<LocalizationCode, Dictionary<string, string>> data, CancellationToken stoppingToken)
+    {
+        var codes = data.Keys.ToList();
+        var dbLanguages = await dbContext.Languages.Where(x => codes.Contains(x.Locale)).ToListAsync(stoppingToken);
+        foreach (var lang in dbLanguages)
+        {
+            var json = JsonSerializer.Serialize(data[lang.Locale]);
+            lang.DisplayLocalizationsJson = json;
+        }
+
+        await dbContext.SaveChangesAsync(stoppingToken);
+    }
+    public async Task UpdateLocaleLocalizations(CancellationToken stoppingToken)
     {
         var data = await ParseCountries(stoppingToken);
         var dic = new Dictionary<LocalizationCode, List<LanguageLocationsDto>>();
@@ -66,11 +89,24 @@ public class LocationsParser
             }
         }
 
-        //dbContext.Languages.Add(new Language{ Locale = LocalizationCode.ENG, CitiesAndCountriesJson = "", Json = "" });
-        //dbContext.Languages.Add(new Language{ Locale = LocalizationCode.UKR, CitiesAndCountriesJson = "", Json = "" });
-        //dbContext.Languages.Add(new Language{ Locale = LocalizationCode.RUS, CitiesAndCountriesJson = "", Json = "" });
-        //await dbContext.SaveChangesAsync(stoppingToken);
+        
         var dbLocalizations = await dbContext.Languages.ToListAsync(stoppingToken);
+        if (dic.Any(x => !dbLocalizations.Exists(y => y.Locale == x.Key)))
+        {
+            var existingLocales = dbLocalizations.Select(x => x.Locale);
+            var nonExistantLangs = dic.Keys.Except(existingLocales);
+            foreach (var lang in nonExistantLangs)
+            {
+                var init = new List<KeyValuePair<string, string>>
+                {
+                    new("init", "_")
+                };
+                dbContext.Languages.Add(new Language(locale: lang, citiesAndCountriesJson: "[]", displayLocalizationsJson: JsonSerializer.Serialize(init)));
+            }
+            await dbContext.SaveChangesAsync(stoppingToken);
+
+            dbLocalizations = await dbContext.Languages.ToListAsync(stoppingToken);
+        }
         foreach (var lang in dbLocalizations)
         {
             var json = JsonSerializer.Serialize(dic[lang.Locale]);

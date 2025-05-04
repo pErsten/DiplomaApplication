@@ -92,7 +92,6 @@
         AvatarPreviewUrl = HttpUtility.UrlDecode(userData.AvatarUrl).Trim('\"');
         await globals.UpdateUser(jsRuntime, userData);
         Snackbar.Add("Account settings updated", Severity.Success);
-        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
     }
 
     private void OpenDeleteDialog() => _deleteDialogOpen = true;

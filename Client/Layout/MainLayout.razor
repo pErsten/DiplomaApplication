@@ -48,10 +48,16 @@
 </div>
 
 @code {
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await globals.LoadUser(_jsRuntime);
+        globals.OnChange += StateHasChanged;
     }
+
+    public void Dispose()
+    {
+        globals.OnChange -= StateHasChanged;
+    }
+
 
     private async Task Logout()
     {

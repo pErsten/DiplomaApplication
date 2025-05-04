@@ -16,6 +16,7 @@ public class Account
     public string PasswordHash { get; set; }
     public DateTime UtcCreated { get; set; }
     public AccountRolesEnum Roles { get; set; }
+    public LocalizationCode Locale { get; set; }
     public string? AvatarUrl { get; set; }
 
 
@@ -27,6 +28,7 @@ public class Account
         Login = login;
         Username = login;
         AccountId = Guid.NewGuid().ToString();
+        Locale = LocalizationCode.ENG;
         UtcCreated = DateTime.UtcNow;
         Roles = AccountRolesEnum.Client;
     }

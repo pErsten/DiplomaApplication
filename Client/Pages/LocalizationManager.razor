@@ -1,5 +1,101 @@
-﻿<h3>LocalizationManager</h3>
+﻿@page "/localizations"
+@using System.Net.Http.Headers
+@using System.Text.Json
+@using Shared.Model.Dtos
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject IConfiguration Configuration
+
+<MudPaper Class="p-4 max-w-7xl mx-auto mt-4 shadow-md">
+    <MudText Typo="Typo.h5">Localization Manager</MudText>
+
+    <MudTable Items="@Entries" Hover="true" Bordered="true" Class="mt-4">
+        <HeaderContent>
+            <MudTh>Placeholder</MudTh>
+            @foreach (var lang in Languages)
+            {
+                <MudTh>@lang.ToUpper()</MudTh>
+            }
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudTextField T="string" @bind-Value="context.Placeholder" Immediate="true" />
+            </MudTd>
+            @foreach (var lang in Languages)
+            {
+                <MudTd>
+                    <MudTextField T="string" @bind-Value="context.Translations[lang]" Immediate="true" />
+                </MudTd>
+            }
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => RemoveRow(context))" />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+
+    <MudButton Class="mt-4" Variant="Variant.Outlined" OnClick="AddRow">
+        <MudIcon Icon="@Icons.Material.Filled.Add" /> Add Row
+    </MudButton>
+
+    <MudButton Class="mt-4 ml-2" Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAll">
+        <MudIcon Icon="@Icons.Material.Filled.Save" /> Save Changes
+    </MudButton>
+</MudPaper>
 
 @code {
+    private List<LocalizationManagerDto> Entries = [];
 
+    private string[] Languages = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var serverUrl = Configuration.GetValue<string>("ServerUrl");
+        using var cli = new HttpClient();
+        cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.User!.Token);
+        var response = await cli.GetAsync($"{serverUrl}/admin/getAllDisplayLocalizations");
+        if (response.StatusCode != System.Net.HttpStatusCode.OK)
+        {
+            Snackbar.Add("Failed to get data", Severity.Error);
+            return;
+        }
+        var result = await response.Content.ReadAsStringAsync();
+        Entries = JsonSerializer.Deserialize<List<LocalizationManagerDto>>(result, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+        Languages = Entries.First().Translations.Keys.ToArray();
+        StateHasChanged();
+    }
+
+    private void AddRow()
+    {
+        var entry = new LocalizationManagerDto
+            {
+                Placeholder = "",
+                Translations = Languages.ToDictionary(l => l, l => "")
+            };
+        Entries.Add(entry);
+    }
+
+    private void RemoveRow(LocalizationManagerDto managerDto)
+    {
+        Entries.Remove(managerDto);
+    }
+
+    private async Task SaveAll()
+    {
+        var serverUrl = Configuration.GetValue<string>("ServerUrl");
+        using var cli = new HttpClient();
+        cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.User!.Token);
+        var response = await cli.PostAsJsonAsync($"{serverUrl}/admin/updateDisplayLocalizations", Entries);
+        if (response.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Changes saved!", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Failed to save changes", Severity.Error);
+        }
+    }
 }

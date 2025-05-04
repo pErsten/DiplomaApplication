@@ -25,6 +25,8 @@ public class SqlContext : DbContext
         mb.Entity<Account>().Property(x => x.Username).HasMaxLength(100);
         mb.Entity<Account>().HasQueryFilter(x => !x.IsDeleted);
 
+        mb.Entity<Language>().Property(x => x.DisplayLocalizationsJson).HasColumnName("DisplayLocalizationsJson");
+
         base.OnModelCreating(mb);
     }
 }

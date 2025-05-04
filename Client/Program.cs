@@ -3,13 +3,21 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Client;
 using Client.Dtos;
 using MudBlazor.Services;
+using Microsoft.JSInterop;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-builder.Services.AddSingleton<Globals>();
+
+var globals = new Globals();
+builder.Services.AddSingleton<Globals>(x => globals);
+
 builder.Services.AddMudServices();
 
-await builder.Build().RunAsync();
+var host = builder.Build();
+var jsRuntime = host.Services.GetRequiredService<IJSRuntime>();
+await globals.LoadUser(jsRuntime);
+
+await host.RunAsync();

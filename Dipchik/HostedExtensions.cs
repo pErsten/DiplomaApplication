@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Security.Claims;
+using System.Text;
 using System.Threading.Channels;
 using CloudinaryDotNet;
 using Dipchik.BackgroundWorkers;
@@ -36,7 +37,7 @@ namespace Dipchik
             services.AddSignalR().AddStackExchangeRedis(redisConnectionStr);
             services.AddDbContext<SqlContext>(options => options.UseNpgsql(sqlConnectionStr));
             services.AddScoped<AuthService>();
-            services.AddScoped<LocationsParser>();
+            services.AddScoped<LocalizationsService>();
             services.AddSingleton<Cloudinary>(x =>
             {
                 var elem = new Cloudinary(cloudinaryConnectionStr);
@@ -78,7 +79,19 @@ namespace Dipchik
                     };
                 });
 
-            services.AddAuthorization();
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy(AccountRolesEnum.Modify.ToString(), policy => policy.RequireAssertion(context =>
+                {
+                    var rolesClaim = context.User.FindFirst(ClaimTypes.Role)?.Value;
+                    if (string.IsNullOrEmpty(rolesClaim)) 
+                        return false;
+                    if (!int.TryParse(rolesClaim, out var roleFlags))
+                        return false;
+
+                    return (roleFlags | (int)AccountRolesEnum.Modify) > 0;
+                }));
+            });
             services.AddSignalR();
             var webClientUrl = builder.Configuration.GetValue<string>("WebClientUrl");
             services.AddCors(options =>
