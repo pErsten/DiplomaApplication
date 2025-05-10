@@ -198,24 +198,22 @@ public static class ToursController
         SqlContext dbContext,
         CancellationToken stoppingToken)
     {
-        var tour = await dbContext.Tours.Where(t => t.Id == id).Select(tour => new TourDto
+        var tour = await dbContext.TourInstances.Include(x => x.Rates).Where(t => t.Id == id).Select(tour => new TourDescDto
         {
-            Id = tour.Id,
-            Title = tour.Title,
-            Description = tour.Description,
-            ImageUrl = tour.ImageUrl,
-            Locations = tour.Locations,
-            Price = tour.Price,
-            TourType = tour.TourType,
-            WithGuide = tour.WithGuide,
-            PrivateTour = tour.PrivateTour,
-            GroupTour = tour.GroupTour,
-            SpecialOffers = tour.SpecialOffers,
-            DurationDays = tour.DurationDays,
-            GuideName = tour.Guide.Name,
-            GuideSurname = tour.Guide.Surname,
-            GuideAvatarUrl = tour.Guide.Account.AvatarUrl,
-            IsActive = tour.IsActive
+            ImageUrl = tour.Tour.ImageUrl,
+            Title = tour.Tour.Title,
+            Description = tour.Tour.Description,
+            Locations = tour.Tour.Locations,
+            Price = tour.Tour.Price,
+            TourType = tour.Tour.TourType,
+            StartDate = tour.StartDate,
+            EndDate = tour.EndDate,
+            Rating = tour.Rating ?? 0d,
+            MaxParticipants = tour.MaxParticipants,
+            CurrentParticipants = tour.CurrentParticipants,
+            GuideName = tour.Tour.Guide.Name,
+            GuideSurname = tour.Tour.Guide.Surname,
+            GuideAvatarUrl = tour.Tour.Guide.Account.AvatarUrl
         }).FirstOrDefaultAsync(stoppingToken);
 
         if (tour == null)

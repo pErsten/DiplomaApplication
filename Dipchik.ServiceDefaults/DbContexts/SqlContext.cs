@@ -60,129 +60,191 @@ public class SqlContext : DbContext
             SaveChanges();
         }
 
-        if (Tours.Any())
+        if (!Tours.Any())
         {
-            return; // Database already seeded
+            var tours = new List<Tour>
+            {
+                new Tour
+                {
+                    Title = "Majestic Alps Tour",
+                    Description = "Explore the breathtaking beauty of the Swiss Alps. Experience stunning mountain views, charming alpine villages, and unforgettable hiking trails.",
+                    Price = 2500,
+                    DurationDays = 7,
+                    WithGuide = true,
+                    Classification = TourClassificationEnum.Group,
+                    TourType = TourTypeEnum.Hiking,
+                    ImageUrl = "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+                    GuideId = guide.Id,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    Locations = new List<int> { 1, 2 }, // Geneva and Zurich
+                    SpecialOffers = SpecialOfferEnum.None,
+                    Instances = new List<TourInstance>
+                    {
+                        new TourInstance
+                        {
+                            StartDate = DateTime.UtcNow.AddDays(10),
+                            EndDate = DateTime.UtcNow.AddDays(17),
+                            Status = TourInstanceStatus.Scheduled,
+                            MaxParticipants = 20,
+                            CurrentParticipants = 0
+                        }
+                    }
+                },
+                new Tour
+                {
+                    Title = "Scenic Italy Journey",
+                    Description = "Discover the rich history and culture of Italy. Visit iconic landmarks, enjoy authentic cuisine, and immerse yourself in the Italian way of life.",
+                    Price = 3200,
+                    DurationDays = 10,
+                    WithGuide = true,
+                    Classification = TourClassificationEnum.Private,
+                    TourType = TourTypeEnum.Sightseeing,
+                    ImageUrl = "https://images.unsplash.com/photo-1464983953574-0892a716854b",
+                    GuideId = guide.Id,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    Locations = new List<int> { 3, 4, 5 }, // Rome, Florence, Venice
+                    SpecialOffers = SpecialOfferEnum.OnSale,
+                    Instances = new List<TourInstance>
+                    {
+                        new TourInstance
+                        {
+                            StartDate = DateTime.UtcNow.AddDays(20),
+                            EndDate = DateTime.UtcNow.AddDays(30),
+                            Status = TourInstanceStatus.Scheduled,
+                            MaxParticipants = 15,
+                            CurrentParticipants = 0
+                        }
+                    }
+                },
+                new Tour
+                {
+                    Title = "Norwegian Fjords Adventure",
+                    Description = "Sail through the stunning Norwegian fjords. Experience the dramatic landscapes, waterfalls, and charming coastal towns of Norway.",
+                    Price = 4100,
+                    DurationDays = 8,
+                    WithGuide = false,
+                    Classification = TourClassificationEnum.Private,
+                    TourType = TourTypeEnum.Recreational,
+                    ImageUrl = "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",
+                    GuideId = guide.Id,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    Locations = new List<int> { 6, 7 }, // Oslo and Bergen
+                    SpecialOffers = SpecialOfferEnum.SpecialDiscount,
+                    Instances = new List<TourInstance>
+                    {
+                        new TourInstance
+                        {
+                            StartDate = DateTime.UtcNow.AddDays(40),
+                            EndDate = DateTime.UtcNow.AddDays(48),
+                            Status = TourInstanceStatus.Scheduled,
+                            MaxParticipants = 30,
+                            CurrentParticipants = 0,
+                        }
+                    }
+                },
+                new Tour
+                {
+                    Title = "Highlights of Belgium",
+                    Description = "Experience the best of Belgium's culture, history, and cuisine. Visit medieval cities, taste world-famous chocolates, and explore historic landmarks.",
+                    Price = 1800,
+                    DurationDays = 5,
+                    WithGuide = true,
+                    Classification = TourClassificationEnum.Group,
+                    TourType = TourTypeEnum.Mixed,
+                    ImageUrl = "https://images.unsplash.com/photo-1502082553048-f009c37129b9",
+                    GuideId = guide.Id,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    Locations = new List<int> { 8, 9, 10, 11 }, // Brussels, Bruges, Antwerp, Ghent
+                    SpecialOffers = SpecialOfferEnum.StartsSoon,
+                    Instances = new List<TourInstance>
+                    {
+                        new TourInstance
+                        {
+                            StartDate = DateTime.UtcNow.AddDays(5),
+                            EndDate = DateTime.UtcNow.AddDays(10),
+                            Status = TourInstanceStatus.Scheduled,
+                            MaxParticipants = 25,
+                            CurrentParticipants = 0
+                        }
+                    }
+                }
+            };
+
+            Tours.AddRange(tours);
+            SaveChanges();
         }
 
-        var tours = new List<Tour>
+        if (!TourInstanceRates.Any())
         {
-            new Tour
+            var rates = new List<TourInstanceRate>
             {
-                Title = "Majestic Alps Tour",
-                Description = "Explore the breathtaking beauty of the Swiss Alps. Experience stunning mountain views, charming alpine villages, and unforgettable hiking trails.",
-                Price = 2500,
-                DurationDays = 7,
-                WithGuide = true,
-                Classification = TourClassificationEnum.Group,
-                TourType = TourTypeEnum.Hiking,
-                ImageUrl = "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
-                GuideId = guide.Id,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                Locations = new List<int> { 1, 2 }, // Geneva and Zurich
-                SpecialOffers = SpecialOfferEnum.None,
-                Instances = new List<TourInstance>
+                new TourInstanceRate
                 {
-                    new TourInstance
-                    {
-                        StartDate = DateTime.UtcNow.AddDays(10),
-                        EndDate = DateTime.UtcNow.AddDays(17),
-                        Status = TourInstanceStatus.Scheduled,
-                        MaxParticipants = 20,
-                        CurrentParticipants = 0,
-                        Rates = new List<TourInstanceRate>()
-                    }
-                }
-            },
-            new Tour
-            {
-                Title = "Scenic Italy Journey",
-                Description = "Discover the rich history and culture of Italy. Visit iconic landmarks, enjoy authentic cuisine, and immerse yourself in the Italian way of life.",
-                Price = 3200,
-                DurationDays = 10,
-                WithGuide = true,
-                Classification = TourClassificationEnum.Private,
-                TourType = TourTypeEnum.Sightseeing,
-                ImageUrl = "https://images.unsplash.com/photo-1464983953574-0892a716854b",
-                GuideId = guide.Id,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                Locations = new List<int> { 3, 4, 5 }, // Rome, Florence, Venice
-                SpecialOffers = SpecialOfferEnum.OnSale,
-                Instances = new List<TourInstance>
+                    TourInstanceId = 1,
+                    Rate = 45, // 4.5 stars
+                    TouristCommentary =
+                        "Amazing experience in the Alps! The views were breathtaking and our guide was very knowledgeable.",
+                    RatedTimeUtc = DateTime.UtcNow.AddDays(-5),
+                    TouristAccountId = 1
+                },
+                new TourInstanceRate
                 {
-                    new TourInstance
-                    {
-                        StartDate = DateTime.UtcNow.AddDays(20),
-                        EndDate = DateTime.UtcNow.AddDays(30),
-                        Status = TourInstanceStatus.Scheduled,
-                        MaxParticipants = 15,
-                        CurrentParticipants = 0,
-                        Rates = new List<TourInstanceRate>()
-                    }
-                }
-            },
-            new Tour
-            {
-                Title = "Norwegian Fjords Adventure",
-                Description = "Sail through the stunning Norwegian fjords. Experience the dramatic landscapes, waterfalls, and charming coastal towns of Norway.",
-                Price = 4100,
-                DurationDays = 8,
-                WithGuide = false,
-                Classification = TourClassificationEnum.Private,
-                TourType = TourTypeEnum.Recreational,
-                ImageUrl = "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",
-                GuideId = guide.Id,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                Locations = new List<int> { 6, 7 }, // Oslo and Bergen
-                SpecialOffers = SpecialOfferEnum.SpecialDiscount,
-                Instances = new List<TourInstance>
+                    TourInstanceId = 1,
+                    Rate = 40, // 4.0 stars
+                    TouristCommentary =
+                        "Great tour, but the weather could have been better. Still enjoyed the experience.",
+                    RatedTimeUtc = DateTime.UtcNow.AddDays(-3),
+                    TouristAccountId = 1
+                },
+                new TourInstanceRate
                 {
-                    new TourInstance
-                    {
-                        StartDate = DateTime.UtcNow.AddDays(40),
-                        EndDate = DateTime.UtcNow.AddDays(48),
-                        Status = TourInstanceStatus.Scheduled,
-                        MaxParticipants = 30,
-                        CurrentParticipants = 0,
-                        Rates = new List<TourInstanceRate>()
-                    }
-                }
-            },
-            new Tour
-            {
-                Title = "Highlights of Belgium",
-                Description = "Experience the best of Belgium's culture, history, and cuisine. Visit medieval cities, taste world-famous chocolates, and explore historic landmarks.",
-                Price = 1800,
-                DurationDays = 5,
-                WithGuide = true,
-                Classification = TourClassificationEnum.Group,
-                TourType = TourTypeEnum.Mixed,
-                ImageUrl = "https://images.unsplash.com/photo-1502082553048-f009c37129b9",
-                GuideId = guide.Id,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                Locations = new List<int> { 8, 9, 10, 11 }, // Brussels, Bruges, Antwerp, Ghent
-                SpecialOffers = SpecialOfferEnum.StartsSoon,
-                Instances = new List<TourInstance>
+                    TourInstanceId = 2,
+                    Rate = 50, // 5.0 stars
+                    TouristCommentary = "Perfect tour! The food, the culture, the history - everything was amazing!",
+                    RatedTimeUtc = DateTime.UtcNow.AddDays(-2),
+                    TouristAccountId = 1
+                },
+                new TourInstanceRate
                 {
-                    new TourInstance
-                    {
-                        StartDate = DateTime.UtcNow.AddDays(5),
-                        EndDate = DateTime.UtcNow.AddDays(10),
-                        Status = TourInstanceStatus.Scheduled,
-                        MaxParticipants = 25,
-                        CurrentParticipants = 0,
-                        Rates = new List<TourInstanceRate>()
-                    }
+                    TourInstanceId = 2,
+                    Rate = 48, // 4.8 stars
+                    TouristCommentary = "Wonderful experience. The private tour made it even more special.",
+                    RatedTimeUtc = DateTime.UtcNow.AddDays(-1),
+                    TouristAccountId = 1
+                },
+                new TourInstanceRate
+                {
+                    TourInstanceId = 3,
+                    Rate = 42, // 4.2 stars
+                    TouristCommentary = "Beautiful fjords and great accommodations. Would recommend!",
+                    RatedTimeUtc = DateTime.UtcNow.AddDays(-4),
+                    TouristAccountId = 1
+                },
+                new TourInstanceRate
+                {
+                    TourInstanceId = 4,
+                    Rate = 38, // 3.8 stars
+                    TouristCommentary = "Good tour overall, but some attractions were too crowded.",
+                    RatedTimeUtc = DateTime.UtcNow.AddDays(-6),
+                    TouristAccountId = 1
+                },
+                new TourInstanceRate
+                {
+                    TourInstanceId = 4,
+                    Rate = 45, // 4.5 stars
+                    TouristCommentary = "Excellent chocolate tasting and historical sites!",
+                    RatedTimeUtc = DateTime.UtcNow.AddDays(-7),
+                    TouristAccountId = 1
                 }
-            }
-        };
-
-        Tours.AddRange(tours);
-        SaveChanges();
+            };
+            
+            TourInstanceRates.AddRange(rates);
+            SaveChanges();
+        }
     }
 
     protected override void OnModelCreating(ModelBuilder mb)
