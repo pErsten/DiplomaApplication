@@ -38,6 +38,7 @@ app.UseAuthorization();
 var anonEPs = app.MapGroup("/").AllowAnonymous().WithOpenApi();
 anonEPs.AddAuthController();
 anonEPs.AddLocalizationController();
+anonEPs.AddToursController();
 if (app.Environment.IsDevelopment())
 {
     anonEPs.AddTestController();

@@ -34,11 +34,12 @@ public enum EventTypeEnum
 
 public enum TourTypeEnum
 {
-    Sightseeing = 0,
+    None = 0,
     Recreational = 1,
     Hiking = 2,
     Mixed = 3,
-    Recovery = 4
+    Recovery = 4,
+    Sightseeing = 5,
 }
 
 [Flags]
@@ -52,9 +53,24 @@ public enum SpecialOfferEnum
 
 public enum DestinationCountEnum
 {
+    None = 0,
     Single = 1,
     TwoToThree = 2,
     FourOrMore = 3
+}
+
+public enum TourInstanceStatus
+{
+    None = 0,
+    Scheduled = 1,
+    Completed = 2,
+    Cancelled = 3,
+    FullyBooked = 4
+}
+public enum TourClassificationEnum
+{
+    Private,
+    Group
 }
 
 public static class EnumSwitches

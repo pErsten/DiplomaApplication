@@ -56,7 +56,7 @@ public class CacheManager
         }
     }
 
-    public async Task<Dictionary<int, LanguageLocationsDto>> GetLocationLocalizations(LocalizationCode code)
+    public async Task<Dictionary<int, LanguageLocationsDto>> GetLocationLocalizations(LocalizationCode code, CancellationToken stoppingToken)
     {
         var scope = scopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetService<SqlContext>();
@@ -68,7 +68,7 @@ public class CacheManager
         }
 
         var data = await dbContext.Languages.Where(x => x.Locale == code).Select(x => x.CitiesAndCountriesJson)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(stoppingToken);
         var list = JsonSerializer.Deserialize<List<LanguageLocationsDto>>(data);
         await redisDB.HashSetAsync($"{Constants.LOCATION_LOCALIZATION_CACHE_KEY}_{code.ToString()}",
             list.Select(x => new HashEntry(x.GeoId.ToString(), JsonSerializer.Serialize(x))).ToArray());

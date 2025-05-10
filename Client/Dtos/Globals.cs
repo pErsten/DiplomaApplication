@@ -16,6 +16,7 @@ public class Globals
     public AccountInfoDto? User { get; private set; } = null;
     public string? Token { get; set; } = null;
     public Dictionary<string, string> Localizations { get; set; } = null!;
+    public Dictionary<int, LanguageLocationsDto> LocaleLocalizations { get; set; } = null!;
 
     public Globals(IConfiguration configuration)
     {
@@ -29,15 +30,27 @@ public class Globals
             return;
         }
         var serverUrl = configuration.GetValue<string>("ServerUrl");
-        using var cli = new HttpClient();
-        var response = await cli.GetAsync($"{serverUrl}/localization/LoadLocalization?localeCode={newLocale.ToString()}");
-        var result = await response.Content.ReadAsStringAsync();
-        if (response.StatusCode != System.Net.HttpStatusCode.OK)
+        using (var cli = new HttpClient())
         {
-            return;
+            var response = await cli.GetAsync($"{serverUrl}/localization/LoadDisplayLocalization?localeCode={newLocale.ToString()}");
+            var result = await response.Content.ReadAsStringAsync();
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                return;
+            }
+            Localizations = JsonSerializer.Deserialize<Dictionary<string, string>>(result);
+        }
+        using (var cli = new HttpClient())
+        {
+            var response = await cli.GetAsync($"{serverUrl}/localization/LoadLocationLocalization?localeCode={newLocale.ToString()}");
+            var result = await response.Content.ReadAsStringAsync();
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                return;
+            }
+            LocaleLocalizations = JsonSerializer.Deserialize<List<LanguageLocationsDto>>(result).ToDictionary(x => x.GeoId);
         }
 
-        Localizations = JsonSerializer.Deserialize<Dictionary<string, string>>(result);
         Notify();
     }
 

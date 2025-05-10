@@ -1,8 +1,11 @@
-@page "/tour/{TourId:int}"
+@page "/tour/{InstanceId:int}"
 @using Common.Model.Entities
-@using Shared.Model
+@using System.Text.Json
+@using System.Net.Http.Headers
 @inject Globals globals
-@inject NavigationManager NavigationManager
+@inject NavigationManager Navigation
+@inject IConfiguration Configuration
+@inject ISnackbar Snackbar
 
 <PageTitle>@globals.Localizations["Tour_Details_Title"]</PageTitle>
 
@@ -11,7 +14,7 @@
     {
         <MudProgressCircular Indeterminate Color="Color.Primary" />
     }
-    else if (Tour == null)
+    else if (Instance == null)
     {
         <MudText Typo="Typo.h5">@globals.Localizations["Tour_NotFound"]</MudText>
     }
@@ -19,24 +22,24 @@
     {
         <MudGrid GutterSize="3">
             <MudItem xs="12" md="6">
-                <MudImage Src="@(string.IsNullOrEmpty(Tour.ImageUrl) ? "https://via.placeholder.com/600x400?text=Tour" : Tour.ImageUrl)" Alt="@Tour.Title" Style="width:100%; height:auto; border-radius:12px;" />
+                <MudImage Src="@(string.IsNullOrEmpty(Instance.Tour.ImageUrl) ? "https://via.placeholder.com/600x400?text=Tour" : Instance.Tour.ImageUrl)" Alt="@Instance.Tour.Title" Style="width:100%; height:auto; border-radius:12px;" />
             </MudItem>
             <MudItem xs="12" md="6">
-                <MudText Typo="Typo.h4" Class="mb-2">@Tour.Title</MudText>
+                <MudText Typo="Typo.h4" Class="mb-2">@Instance.Tour.Title</MudText>
                 <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
-                    <MudAvatar Size="Size.Small" Image="@Tour.AuthorAvatarUrl" />
-                    <MudText Typo="Typo.subtitle2">@Tour.AuthorName</MudText>
+                    <MudAvatar Size="Size.Small" Image="@Instance.Tour.Guide.Account.AvatarUrl" />
+                    <MudText Typo="Typo.subtitle2">@Instance.Tour.Guide.Name @Instance.Tour.Guide.Surname</MudText>
                 </MudStack>
-                <MudText Typo="Typo.body1" Class="mb-2">@Tour.Description</MudText>
-                <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tour_Locations"]:</b> @string.Join(", ", Tour.Locations)</MudText>
-                <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tour_Dates"]:</b> @Tour.StartDate:dd MMM yyyy – @Tour.EndDate:dd MMM yyyy</MudText>
-                <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tour_Duration"]:</b> @((Tour.EndDate - Tour.StartDate).TotalDays) @globals.Localizations["Tours_Filter_Days"]</MudText>
-                <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tour_Type"]:</b> @globals.Localizations[$"TourType_{Tour.TourType}"]</MudText>
-                <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tour_Price"]:</b> $@Tour.Price</MudText>
+                <MudText Typo="Typo.body1" Class="mb-2">@Instance.Tour.Description</MudText>
+                <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tour_Locations"]:</b> @string.Join(", ", Instance.Tour.Locations.Select(l => l))</MudText>
+                <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tour_Dates"]:</b> @Instance.StartDate.ToString("dd MMM yyyy") – @Instance.EndDate.ToString("dd MMM yyyy")</MudText>
+                <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tour_Duration"]:</b> @((Instance.EndDate - Instance.StartDate).TotalDays) @globals.Localizations["Tours_Filter_Days"]</MudText>
+                <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tour_Type"]:</b> @globals.Localizations[$"TourType_{Instance.Tour.TourType}"]</MudText>
+                <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tour_Price"]:</b> $@Instance.Tour.Price</MudText>
                 <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
                     <MudText Typo="Typo.body2">@globals.Localizations["Tour_Rating"]:</MudText>
-                    <MudRating Value="@Tour.Rating" MaxValue="5" ReadOnly Size="Size.Small" />
-                    <MudText Typo="Typo.caption">@Tour.Rating.ToString("0.0")</MudText>
+                    <MudRating Value="@(Instance.Rating ?? 0)" MaxValue="5" ReadOnly Size="Size.Small" />
+                    <MudText Typo="Typo.caption">@(Instance.Rating?.ToString("0.0") ?? "0.0")</MudText>
                 </MudStack>
                 <MudDivider Class="my-2" />
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!globals.IsLoggedIn)" OnClick="BookTour">
@@ -52,122 +55,91 @@
 </MudContainer>
 
 @code {
-    [Parameter] public int TourId { get; set; }
-    private Tour? Tour;
+    [Parameter]
+    public int InstanceId { get; set; }
+
+    private TourInstance? Instance;
     private bool IsLoading = true;
+    private bool IsBooking = false;
+    private int SelectedParticipants = 1;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
         IsLoading = true;
-        // TODO: Fetch tour details from backend by TourId
-        Tour = GetMockTour(TourId);
-        IsLoading = false;
-    }
-
-    private void BookTour()
-    {
-        if (!globals.IsLoggedIn)
+        try
         {
-            NavigationManager.NavigateTo("/login");
-            return;
-        }
-        // TODO: Implement booking logic here
-    }
+            var serverUrl = Configuration.GetValue<string>("ServerUrl");
+            using var cli = new HttpClient();
+            cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.Token);
 
-    // Mock data for development
-    private Tour? GetMockTour(int id)
-    {
-        var all = new List<Tour>
-        {
-            new Tour
+            var response = await cli.GetAsync($"{serverUrl}/Tours/GetTourById/{InstanceId}");
+            var result = await response.Content.ReadAsStringAsync();
+            
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {
-                Id = 1,
-                Title = "Majestic Alps Tour",
-                Description = "Explore the Alps...",
-                ImageUrl = "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
-                AuthorName = "Anna Müller",
-                AuthorAvatarUrl = "https://randomuser.me/api/portraits/women/1.jpg",
-                Locations = new List<string> { "Chamonix", "Zermatt", "St. Moritz" },
-                StartDate = DateTime.Now.AddDays(10),
-                EndDate = DateTime.Now.AddDays(17),
-                Price = 2500,
-                TourType = TourTypeEnum.Hiking,
-                Rating = 4.8,
-                WithGuide = true,
-                PrivateTour = false,
-                GroupTour = true,
-                OnSale = true,
-                SpecialDiscount = false,
-                SpecialOffers = SpecialOfferEnum.OnSale,
-                Country = "Switzerland"
-            },
-            new Tour
-            {
-                Id = 2,
-                Title = "Scenic Italy Journey",
-                Description = "Discover Italy...",
-                ImageUrl = "https://images.unsplash.com/photo-1464983953574-0892a716854b",
-                AuthorName = "Roberto Russo",
-                AuthorAvatarUrl = "https://randomuser.me/api/portraits/men/2.jpg",
-                Locations = new List<string> { "Rome", "Florence", "Venice" },
-                StartDate = DateTime.Now.AddDays(20),
-                EndDate = DateTime.Now.AddDays(30),
-                Price = 3200,
-                TourType = TourTypeEnum.Sightseeing,
-                Rating = 4.5,
-                WithGuide = true,
-                PrivateTour = true,
-                GroupTour = false,
-                OnSale = false,
-                SpecialDiscount = true,
-                SpecialOffers = SpecialOfferEnum.SpecialDiscount,
-                Country = "Italy"
-            },
-            new Tour
-            {
-                Id = 3,
-                Title = "Norwegian Fjords Adventure",
-                Description = "Sail the fjords...",
-                ImageUrl = "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",
-                AuthorName = "Erik Johansen",
-                AuthorAvatarUrl = "https://randomuser.me/api/portraits/men/3.jpg",
-                Locations = new List<string> { "Bergen", "Fiam", "Geiranger" },
-                StartDate = DateTime.Now.AddDays(40),
-                EndDate = DateTime.Now.AddDays(48),
-                Price = 4100,
-                TourType = TourTypeEnum.Recreational,
-                Rating = 4.9,
-                WithGuide = false,
-                PrivateTour = false,
-                GroupTour = true,
-                OnSale = false,
-                SpecialDiscount = false,
-                SpecialOffers = SpecialOfferEnum.None,
-                Country = "Norway"
-            },
-            new Tour
-            {
-                Id = 4,
-                Title = "Highlights of Belgium",
-                Description = "See the best of Belgium...",
-                ImageUrl = "https://images.unsplash.com/photo-1502082553048-f009c37129b9",
-                AuthorName = "Sophie Dubois",
-                AuthorAvatarUrl = "https://randomuser.me/api/portraits/women/4.jpg",
-                Locations = new List<string> { "Bruges", "Liege", "Brussels" },
-                StartDate = DateTime.Now.AddDays(5),
-                EndDate = DateTime.Now.AddDays(10),
-                Price = 1800,
-                TourType = TourTypeEnum.Mixed,
-                Rating = 4.2,
-                WithGuide = true,
-                PrivateTour = false,
-                GroupTour = true,
-                OnSale = true,
-                SpecialDiscount = false,
-                SpecialOffers = SpecialOfferEnum.OnSale,
-                Country = "Belgium"
+                Snackbar.Add($"{globals.Localizations["Messages_FailedToGetData"]} - {result}", Severity.Error);
+                return;
             }
-        };
-        return all.FirstOrDefault(t => t.Id == id);
+
+            Instance = JsonSerializer.Deserialize<TourInstance>(result, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (Instance == null)
+            {
+                Snackbar.Add(globals.Localizations["Messages_TourNotFound"], Severity.Error);
+                Navigation.NavigateTo("/tours");
+                return;
+            }
+
+            SelectedParticipants = Math.Min(SelectedParticipants, Instance.MaxParticipants - Instance.CurrentParticipants);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"{globals.Localizations["Messages_FailedToGetData"]} - {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task BookTour()
+    {
+        if (Instance == null) return;
+
+        IsBooking = true;
+        try
+        {
+            var serverUrl = Configuration.GetValue<string>("ServerUrl");
+            using var cli = new HttpClient();
+            cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.Token);
+
+            var response = await cli.PostAsync($"{serverUrl}/Tours/BookTour/{InstanceId}?participants={SelectedParticipants}", null);
+            var result = await response.Content.ReadAsStringAsync();
+            
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                Snackbar.Add($"{globals.Localizations["Messages_FailedToBookTour"]} - {result}", Severity.Error);
+                return;
+            }
+
+            Snackbar.Add(globals.Localizations["Messages_TourBookedSuccessfully"], Severity.Success);
+            await LoadData(); // Refresh data to update current participants
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"{globals.Localizations["Messages_FailedToBookTour"]} - {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            IsBooking = false;
+        }
     }
 } 

@@ -18,7 +18,7 @@ public static class TestController
 
     public static async Task<IResult> GetLocationLocalizations(CacheManager cacheManager, CancellationToken stoppingToken)
     {
-        var data = await cacheManager.GetLocationLocalizations(LocalizationCode.UKR);
+        var data = await cacheManager.GetLocationLocalizations(LocalizationCode.UKR, stoppingToken);
         return Results.Ok(JsonSerializer.Serialize(data));
     }
 
