@@ -44,6 +44,7 @@ public class Globals
     public async Task Logout(IJSRuntime jsRuntime)
     {
         User = null;
+        Token = null;
         await jsRuntime.InvokeAsync<string>("localStorage.setItem", "userData", null);
         await jsRuntime.InvokeAsync<string>("localStorage.setItem", "userToken", null);
         Notify();

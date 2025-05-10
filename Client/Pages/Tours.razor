@@ -1,0 +1,238 @@
+﻿@page "/tours"
+@using MudBlazor
+
+<PageTitle>Tours</PageTitle>
+<MudContainer MaxWidth="MaxWidth.False" Class="p-0">
+    <div style="position: relative; height: 800px;">
+        <MudImage ObjectPosition="ObjectPosition.Top"
+        ObjectFit="ObjectFit.Cover"
+        Style="width:100%; height:100%"
+        Src="https://res.cloudinary.com/da7kbbrap/image/upload/v1746448800/ChatGPT_Image_May_5_2025_03_39_39_PM_kbvhla.png"
+        Class="rounded-lg" />
+
+        <div class="d-flex flex-column align-items-center justify-center z-100 absolute"
+        style="top: 0; left: 0; right: 0; bottom: 0; color: white">
+            <MudText Typo="Typo.h3" Class="mb-4">Explore the world with us</MudText>
+
+            <MudPaper Class="d-flex align-center gap-2 p-3 rounded" Style="position: relative; overflow: visible;">
+                <!-- Destination Search -->
+                <MudTextField @bind-Value="TextValue" Placeholder="Search destinations" Style="width: 200px;" />
+
+                <!-- Date Picker -->
+                <MudDatePicker Placeholder="Start date" />
+
+                <!-- Fake Dropdown Toggle -->
+                <MudButton Variant="Variant.Outlined" OnClick="@ToggleFilter" EndIcon=@(ShowFilter ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)>
+                    @if (ShowFilter)
+                    {
+                        <div>Hide filters</div>
+                    }
+                    else
+                    {
+                        <div>Show filters</div>
+                    }
+                </MudButton>
+
+                <!-- Dropdown Content -->
+                @if (ShowFilter)
+                {
+                    <MudPaper Class="p-4 mt-2 absolute z-100" Style="top: 100%; left: 0; width: 100%; box-shadow: var(--mud-elevation-8); background: white;">
+                        <MudStack Spacing="3" Class="p-4">
+                            <MudStack Direction="Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                <MudText Typo="Typo.h6">Filters</MudText>
+                                <MudLink Class="text-primary" OnClick="ClearAll">Clear all</MudLink>
+                            </MudStack>
+
+                            <!-- Duration -->
+                            <MudStack>
+                                <MudText Typo="Typo.subtitle2">Duration</MudText>
+                                <MudSlider Min="1" Max="30" Step="1" @bind-Value="Duration" />
+                                <MudText Typo="Typo.caption">@Duration days</MudText>
+                            </MudStack>
+
+                            <!-- Number of Destinations -->
+                            <MudText Typo="Typo.subtitle2"># of Destinations</MudText>
+                            <MudRadioGroup T="string" @bind-SelectedOption="DestinationsCount">
+                                <MudSelectItem Value="@("1")">Single</MudSelectItem>
+                                <MudSelectItem Value="@("2-3")">2–3</MudSelectItem>
+                                <MudSelectItem Value="@("4+")">4 or more</MudSelectItem>
+                            </MudRadioGroup>
+
+                            <!-- Tour Type -->
+                            <MudText Typo="Typo.subtitle2">Tour Type</MudText>
+                            <MudSelect T="string" MultiSelection="true" SelectedValues=SelectedTypes>
+                                <MudSelectItem Value="@("Sightseeing")">Sightseeing</MudSelectItem>
+                                <MudSelectItem Value="@("Recreational")">Recreational</MudSelectItem>
+                                <MudSelectItem Value="@("Hiking")">Hiking</MudSelectItem>
+                                <MudSelectItem Value="@("Mixed")">Mixed</MudSelectItem>
+                                <MudSelectItem Value="@("VeteranRecovery")">Recovery for Veterans</MudSelectItem>
+                            </MudSelect>
+
+                            <!-- Price -->
+                            <MudStack>
+                                <MudText Typo="Typo.subtitle2">Price</MudText>
+                                <MudSlider Min="0" Max="5000" Step="50" @bind-Value="Price" />
+                                <MudText Typo="Typo.caption">$@Price</MudText>
+                            </MudStack>
+
+                            <!-- Rating -->
+                            <MudText Typo="Typo.subtitle2">Rating</MudText>
+                            <MudRating MaxValue="5" @bind-SelectedValue="Rating" />
+
+                            <!-- Format Options -->
+                            <MudText Typo="Typo.subtitle2">Tour Format</MudText>
+                            <MudCheckBox @bind-Value="WithGuide" Label="With guide" />
+                            <MudCheckBox @bind-Value="PrivateTour" Label="Private tour" />
+                            <MudCheckBox @bind-Value="GroupTour" Label="Group tour" />
+
+                            <!-- Special Offers -->
+                            <MudText Typo="Typo.subtitle2">Special Offers</MudText>
+                            <MudCheckBox @bind-Value="OnSale" Label="On sale" />
+                            <MudCheckBox @bind-Value="StartsSoon" Label="Starts soon" />
+                            <MudCheckBox @bind-Value="SpecialDiscount" Label="Special discount" />
+                        </MudStack>
+
+                    </MudPaper>
+                }
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary">Search</MudButton>
+            </MudPaper>
+        </div>
+    </div>
+
+    <!-- Featured Tours -->
+    <MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
+        <MudText Typo="Typo.h5" Class="mb-4">Featured tours</MudText>
+        <MudGrid GutterSize="3">
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard>
+                    <MudCardContent>
+                        <MudText Typo="Typo.subtitle1">Tour 1</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard>
+                    <MudCardContent>
+                        <MudText Typo="Typo.subtitle1">Tour 2</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard>
+                    <MudCardContent>
+                        <MudText Typo="Typo.subtitle1">Tour 3</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+</MudContainer>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudGrid>
+        <!-- Filters Dropdown -->
+        <MudItem xs="12">
+        </MudItem>
+
+        <!-- Tours Display -->
+        <MudItem xs="12">
+            <MudText Typo="Typo.h5" Class="mb-3">Available Tours</MudText>
+
+            <MudGrid GutterSize="3">
+                @foreach (var tour in FilteredTours)
+                {
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudCard>
+                            <MudCardMedia Image="@tour.ImageUrl" Height="140" />
+                            <MudCardContent>
+                                <MudText Typo="Typo.subtitle1">@tour.Title</MudText>
+                                <MudText Typo="Typo.body2">@string.Join(", ", tour.Destinations)</MudText>
+                                <MudText Typo="Typo.caption">@tour.Duration days — $@tour.Price</MudText>
+                            </MudCardContent>
+                            <MudCardActions>
+                                <MudButton Variant="Variant.Text" Color="Color.Primary">Details</MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private bool ShowFilter;
+
+    private void ToggleFilter()
+    {
+        ShowFilter = !ShowFilter;
+    }
+    private int Duration = 1;
+    private int Price = 5000;
+    private int Rating = 4;
+
+    private string DestinationsCount = "1";
+    private IEnumerable<string> SelectedTypes = new HashSet<string>();
+
+    private bool WithGuide;
+    private bool PrivateTour;
+    private bool GroupTour;
+    private bool OnSale;
+    private bool StartsSoon;
+    private bool SpecialDiscount;
+    
+    private void ClearAll()
+    {
+        Duration = 1;
+        Price = 5000;
+        Rating = 0;
+        DestinationsCount = "1";
+        SelectedTypes = new HashSet<string>();
+        WithGuide = PrivateTour = GroupTour = false;
+        OnSale = StartsSoon = SpecialDiscount = false;
+    }
+
+    private string TextValue;
+
+    private List<TourDto> AllTours = new(); // Should be fetched from backend
+    private List<TourDto> FilteredTours = new();
+
+    protected override void OnInitialized()
+    {
+        // Simulated data; in real app, fetch from backend
+        AllTours = new()
+        {
+            new TourDto("Belgium Explorer", new[] { "Brugge", "Liege", "Bruxelles" }, 7, 1200, "tour1.jpg"),
+            new TourDto("Ukrainian Retreat", new[] { "Lviv", "Truskavets" }, 5, 900, "tour2.jpg"),
+        };
+
+        ApplyFilters();
+    }
+
+    private void ApplyFilters()
+    {
+        FilteredTours = AllTours
+            .Where(t => t.Duration <= Duration && t.Price <= Price && t.Rating >= Rating)
+            .ToList();
+    }
+
+    public class TourDto
+    {
+        public string Title { get; set; }
+        public IEnumerable<string> Destinations { get; set; }
+        public int Duration { get; set; }
+        public int Price { get; set; }
+        public int Rating { get; set; } = 4;
+        public string ImageUrl { get; set; }
+
+        public TourDto(string title, IEnumerable<string> destinations, int duration, int price, string imageUrl)
+        {
+            Title = title;
+            Destinations = destinations;
+            Duration = duration;
+            Price = price;
+            ImageUrl = imageUrl;
+        }
+    }
+}
