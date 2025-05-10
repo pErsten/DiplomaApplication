@@ -32,6 +32,31 @@ public enum EventTypeEnum
     DisplayLocalizationsUpdated = 2,
 }
 
+public enum TourTypeEnum
+{
+    Sightseeing = 0,
+    Recreational = 1,
+    Hiking = 2,
+    Mixed = 3,
+    Recovery = 4
+}
+
+[Flags]
+public enum SpecialOfferEnum
+{
+    None = 0,
+    OnSale = 1 << 0,
+    StartsSoon = 1 << 1,
+    SpecialDiscount = 1 << 2
+}
+
+public enum DestinationCountEnum
+{
+    Single = 1,
+    TwoToThree = 2,
+    FourOrMore = 3
+}
+
 public static class EnumSwitches
 {
     public static LocalizationCode GetLocalizationCode(string code) => code switch

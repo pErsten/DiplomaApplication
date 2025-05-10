@@ -4,6 +4,7 @@ using Client;
 using Client.Dtos;
 using MudBlazor.Services;
 using Microsoft.JSInterop;
+using MudExtensions.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -15,6 +16,7 @@ var globals = new Globals(builder.Configuration);
 builder.Services.AddSingleton<Globals>(x => globals);
 
 builder.Services.AddMudServices();
+builder.Services.AddMudExtensions();
 
 var host = builder.Build();
 var jsRuntime = host.Services.GetRequiredService<IJSRuntime>();

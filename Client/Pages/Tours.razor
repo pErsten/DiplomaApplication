@@ -1,5 +1,8 @@
 ﻿@page "/tours"
-@using MudBlazor
+@using Common.Model.Entities
+@using Shared.Model
+@inject Globals globals
+@inject NavigationManager Navigation
 
 <PageTitle>Tours</PageTitle>
 <MudContainer MaxWidth="MaxWidth.False" Class="p-0">
@@ -12,24 +15,24 @@
 
         <div class="d-flex flex-column align-items-center justify-center z-100 absolute"
         style="top: 0; left: 0; right: 0; bottom: 0; color: white">
-            <MudText Typo="Typo.h3" Class="mb-4">Explore the world with us</MudText>
+            <MudText Typo="Typo.h3" Class="mb-4">@globals.Localizations["Tours_Hero_Title"]</MudText>
 
             <MudPaper Class="d-flex align-center gap-2 p-3 rounded" Style="position: relative; overflow: visible;">
                 <!-- Destination Search -->
-                <MudTextField @bind-Value="TextValue" Placeholder="Search destinations" Style="width: 200px;" />
+                <MudAutocomplete T="string" @bind-Value="SelectedDestination" Placeholder="@globals.Localizations["Tours_Filter_SearchDestinations"]" SearchFunc="SearchDestinations" Style="width: 200px;" />
 
                 <!-- Date Picker -->
-                <MudDatePicker Placeholder="Start date" />
+                <MudDatePicker @bind-Date="SelectedStartDate" Placeholder="@globals.Localizations["Tours_Filter_StartDate"]" />
 
                 <!-- Fake Dropdown Toggle -->
                 <MudButton Variant="Variant.Outlined" OnClick="@ToggleFilter" EndIcon=@(ShowFilter ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)>
                     @if (ShowFilter)
                     {
-                        <div>Hide filters</div>
+                        <div>@globals.Localizations["Tours_Filter_HideFilters"]</div>
                     }
                     else
                     {
-                        <div>Show filters</div>
+                        <div>@globals.Localizations["Tours_Filter_ShowFilters"]</div>
                     }
                 </MudButton>
 
@@ -39,200 +42,409 @@
                     <MudPaper Class="p-4 mt-2 absolute z-100" Style="top: 100%; left: 0; width: 100%; box-shadow: var(--mud-elevation-8); background: white;">
                         <MudStack Spacing="3" Class="p-4">
                             <MudStack Direction="Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
-                                <MudText Typo="Typo.h6">Filters</MudText>
-                                <MudLink Class="text-primary" OnClick="ClearAll">Clear all</MudLink>
+                                <MudLink Class="text-primary" OnClick="ClearAll">@globals.Localizations["Tours_Filter_ClearAll"]</MudLink>
                             </MudStack>
 
                             <!-- Duration -->
                             <MudStack>
-                                <MudText Typo="Typo.subtitle2">Duration</MudText>
-                                <MudSlider Min="1" Max="30" Step="1" @bind-Value="Duration" />
-                                <MudText Typo="Typo.caption">@Duration days</MudText>
+                                <MudText Typo="Typo.subtitle2">@globals.Localizations["Tours_Filter_Duration"]</MudText>
+                                <MudSlider Min="@MinDuration" Max="@MaxDuration" Step="1" @bind-Value="Duration"  />
+                                <MudText Typo="Typo.caption">@Duration @globals.Localizations["Tours_Filter_Days"]</MudText>
+                            </MudStack>
+
+                            <!-- Price Range -->
+                            <MudStack>
+                                <MudText Typo="Typo.subtitle2">@globals.Localizations["Tours_Filter_Price"]</MudText>
+                                <MudRangeSlider Min="0" Max="5000" Step="50" @bind-Value="MinPrice" @bind-UpperValue="MaxPrice" Range=true Immediate=true MinDistance=50 />
+                                <MudText Typo="Typo.caption">$@MinPrice – $@MaxPrice</MudText>
                             </MudStack>
 
                             <!-- Number of Destinations -->
-                            <MudText Typo="Typo.subtitle2"># of Destinations</MudText>
-                            <MudRadioGroup T="string" @bind-SelectedOption="DestinationsCount">
-                                <MudSelectItem Value="@("1")">Single</MudSelectItem>
-                                <MudSelectItem Value="@("2-3")">2–3</MudSelectItem>
-                                <MudSelectItem Value="@("4+")">4 or more</MudSelectItem>
+                            <MudText Typo="Typo.subtitle2">@globals.Localizations["Tours_Filter_NumberOfDestinations"]</MudText>
+                            <MudRadioGroup T="DestinationCountEnum" @bind-SelectedOption="DestinationsCount">
+                                <MudRadio T="DestinationCountEnum" Option="DestinationCountEnum.Single">@globals.Localizations["Tours_Filter_SingleLocation"]</MudRadio>
+                                <MudRadio T="DestinationCountEnum" Option="DestinationCountEnum.TwoToThree">@globals.Localizations["Tours_Filter_2_3Locations"]</MudRadio>
+                                <MudRadio T="DestinationCountEnum" Option="DestinationCountEnum.FourPlus">@globals.Localizations["Tours_Filter_4PlusLocations"]</MudRadio>
                             </MudRadioGroup>
 
                             <!-- Tour Type -->
-                            <MudText Typo="Typo.subtitle2">Tour Type</MudText>
-                            <MudSelect T="string" MultiSelection="true" SelectedValues=SelectedTypes>
-                                <MudSelectItem Value="@("Sightseeing")">Sightseeing</MudSelectItem>
-                                <MudSelectItem Value="@("Recreational")">Recreational</MudSelectItem>
-                                <MudSelectItem Value="@("Hiking")">Hiking</MudSelectItem>
-                                <MudSelectItem Value="@("Mixed")">Mixed</MudSelectItem>
-                                <MudSelectItem Value="@("VeteranRecovery")">Recovery for Veterans</MudSelectItem>
+                            <MudText Typo="Typo.subtitle2">@globals.Localizations["Tours_Filter_TourType"]</MudText>
+                            <MudSelect MultiSelectionTextFunc="MultiSelectionTextFunc" T="TourTypeEnum" MultiSelection="true" @bind-SelectedValues="SelectedTypes" >
+                                @foreach (TourTypeEnum type in Enum.GetValues(typeof(TourTypeEnum)))
+                                {
+                                    <MudSelectItem Value="@type">@globals.Localizations[$"TourType_{type}"]</MudSelectItem>
+                                }
                             </MudSelect>
 
-                            <!-- Price -->
-                            <MudStack>
-                                <MudText Typo="Typo.subtitle2">Price</MudText>
-                                <MudSlider Min="0" Max="5000" Step="50" @bind-Value="Price" />
-                                <MudText Typo="Typo.caption">$@Price</MudText>
-                            </MudStack>
-
                             <!-- Rating -->
-                            <MudText Typo="Typo.subtitle2">Rating</MudText>
-                            <MudRating MaxValue="5" @bind-SelectedValue="Rating" />
+                            <MudText Typo="Typo.subtitle2">@globals.Localizations["Tours_Filter_Rating"]</MudText>
+                            <MudSlider Min="1.0" Max="5.0" Step="0.1" @bind-Value="Rating"/>
+                            <MudText Typo="Typo.caption">@Rating.ToString("0.0") @globals.Localizations["Tours_Filter_Stars"]</MudText>
 
                             <!-- Format Options -->
-                            <MudText Typo="Typo.subtitle2">Tour Format</MudText>
-                            <MudCheckBox @bind-Value="WithGuide" Label="With guide" />
-                            <MudCheckBox @bind-Value="PrivateTour" Label="Private tour" />
-                            <MudCheckBox @bind-Value="GroupTour" Label="Group tour" />
+                            <MudText Typo="Typo.subtitle2">@globals.Localizations["Tours_Filter_TourFormat"]</MudText>
+                            <MudCheckBox T=bool @bind-Checked="WithGuide" Label="@globals.Localizations["Tours_Filter_WithGuide"]" />
+                            <MudCheckBox T=bool @bind-Checked="PrivateTour" Label="@globals.Localizations["Tours_Filter_PrivateTour"]" />
+                            <MudCheckBox T=bool @bind-Checked="GroupTour" Label="@globals.Localizations["Tours_Filter_GroupTour"]" />
 
                             <!-- Special Offers -->
-                            <MudText Typo="Typo.subtitle2">Special Offers</MudText>
-                            <MudCheckBox @bind-Value="OnSale" Label="On sale" />
-                            <MudCheckBox @bind-Value="StartsSoon" Label="Starts soon" />
-                            <MudCheckBox @bind-Value="SpecialDiscount" Label="Special discount" />
+                            <MudText Typo="Typo.subtitle2">@globals.Localizations["Tours_Filter_SpecialOffers"]</MudText>
+                            <MudCheckBox T=bool @bind-Checked="OnSale" Label="@globals.Localizations["Tours_Filter_OnSale"]" />
+                            <MudCheckBox T=bool @bind-Checked="StartsSoon" Label="@globals.Localizations["Tours_Filter_StartsSoon"]" />
+                            <MudCheckBox T=bool @bind-Checked="SpecialDiscount" Label="@globals.Localizations["Tours_Filter_SpecialDiscount"]" />
                         </MudStack>
-
                     </MudPaper>
                 }
 
-                <MudButton Variant="Variant.Filled" Color="Color.Primary">Search</MudButton>
+                <!-- No explicit Search button, filters are live -->
             </MudPaper>
         </div>
     </div>
 
-    <!-- Featured Tours -->
+    <!-- Featured Tours (optional, can be removed or replaced) -->
     <MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
-        <MudText Typo="Typo.h5" Class="mb-4">Featured tours</MudText>
+        <MudText Typo="Typo.h5" Class="mb-4">@globals.Localizations["Tours_FeaturedTours"]</MudText>
         <MudGrid GutterSize="3">
-            <MudItem xs="12" sm="6" md="4">
-                <MudCard>
-                    <MudCardContent>
-                        <MudText Typo="Typo.subtitle1">Tour 1</MudText>
-                    </MudCardContent>
-                </MudCard>
-            </MudItem>
-            <MudItem xs="12" sm="6" md="4">
-                <MudCard>
-                    <MudCardContent>
-                        <MudText Typo="Typo.subtitle1">Tour 2</MudText>
-                    </MudCardContent>
-                </MudCard>
-            </MudItem>
-            <MudItem xs="12" sm="6" md="4">
-                <MudCard>
-                    <MudCardContent>
-                        <MudText Typo="Typo.subtitle1">Tour 3</MudText>
-                    </MudCardContent>
-                </MudCard>
-            </MudItem>
+            @foreach (var tour in FeaturedTours)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    @TourCard(tour)
+                </MudItem>
+            }
         </MudGrid>
     </MudContainer>
 </MudContainer>
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
     <MudGrid>
-        <!-- Filters Dropdown -->
-        <MudItem xs="12">
-        </MudItem>
 
         <!-- Tours Display -->
         <MudItem xs="12">
-            <MudText Typo="Typo.h5" Class="mb-3">Available Tours</MudText>
-
-            <MudGrid GutterSize="3">
-                @foreach (var tour in FilteredTours)
-                {
-                    <MudItem xs="12" sm="6" md="4">
-                        <MudCard>
-                            <MudCardMedia Image="@tour.ImageUrl" Height="140" />
-                            <MudCardContent>
-                                <MudText Typo="Typo.subtitle1">@tour.Title</MudText>
-                                <MudText Typo="Typo.body2">@string.Join(", ", tour.Destinations)</MudText>
-                                <MudText Typo="Typo.caption">@tour.Duration days — $@tour.Price</MudText>
-                            </MudCardContent>
-                            <MudCardActions>
-                                <MudButton Variant="Variant.Text" Color="Color.Primary">Details</MudButton>
-                            </MudCardActions>
-                        </MudCard>
-                    </MudItem>
-                }
-            </MudGrid>
+            <MudText Typo="Typo.h5" Class="mb-3">@globals.Localizations["Tours_SearchResults"]</MudText>
+            @if (IsLoading)
+            {
+                <MudProgressCircular Indeterminate Color="Color.Primary" />
+            }
+            else if (FilteredTours.Count == 0)
+            {
+                <MudText Typo="Typo.subtitle1">@globals.Localizations["Tours_NoResultsFound"]</MudText>
+            }
+            else
+            {
+                <MudGrid GutterSize="3">
+                    @foreach (var tour in PagedTours)
+                    {
+                        <MudItem xs="12" sm="6" md="4">
+                            @TourCard(tour)
+                        </MudItem>
+                    }
+                </MudGrid>
+                <MudTablePager PageSizeOptions="new int[] {6, 12, 24}" PageSize="@PageSize" PageIndex="@PageIndex" RowsPerPageString="" OnPageChanged="OnPageChanged" RowsCount="@FilteredTours.Count" />
+            }
         </MudItem>
     </MudGrid>
 </MudContainer>
 
 @code {
+
+    // Filter state
     private bool ShowFilter;
-
-    private void ToggleFilter()
-    {
-        ShowFilter = !ShowFilter;
-    }
+    private string SelectedDestination;
+    private DateTime? SelectedStartDate;
     private int Duration = 1;
-    private int Price = 5000;
-    private int Rating = 4;
-
-    private string DestinationsCount = "1";
-    private IEnumerable<string> SelectedTypes = new HashSet<string>();
-
+    private int MinDuration = 1;
+    private int MaxDuration = 30;
+    private DestinationCountEnum DestinationsCount = DestinationCountEnum.Single;
+    private IEnumerable<TourTypeEnum> SelectedTypes = new HashSet<TourTypeEnum>();
+    private decimal MinPrice = 0;
+    private decimal MaxPrice = 5000;
+    private double Rating = 1.0;
     private bool WithGuide;
     private bool PrivateTour;
     private bool GroupTour;
     private bool OnSale;
     private bool StartsSoon;
     private bool SpecialDiscount;
+    private bool IsLoading = true;
+
+    // Data
+    private List<Tour> AllTours = new(); // TODO: Fetch from backend
+    private List<Tour> FilteredTours = new();
+    private List<Tour> FeaturedTours = new();
+    private List<Tour> PagedTours = new();
+    private List<Location> AllDestinations = new(); // TODO: Fetch from backend
+
+    // Pagination
+    private int PageIndex = 0;
+    private int PageSize = 6;
+
+    private string SortBy = "price";
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsLoading = true;
+        // TODO: Fetch AllTours and AllDestinations from backend
+
+        AllTours = GetMockTours();
+        AllDestinations = AllTours.SelectMany(t => t.Locations).Distinct().ToList();
+        MinDuration = AllTours.Min(t => (int)(t.EndDate - t.StartDate).TotalDays);
+        MaxDuration = AllTours.Max(t => (int)(t.EndDate - t.StartDate).TotalDays);
+        MinPrice = AllTours.Min(t => t.Price);
+        MaxPrice = AllTours.Max(t => t.Price);
+        FeaturedTours = AllTours.Take(3).ToList();
+        ApplyFilters();
+        IsLoading = false;
+    }
     
+    string MultiSelectionTextFunc(List<string?>? arg)
+        => string.Join(", ", (SelectedTypes as HashSet<TourTypeEnum>)!.Select(x => globals.Localizations[$"TourType_{x}"]));
+
+    private void ToggleFilter() => ShowFilter = !ShowFilter;
+
     private void ClearAll()
     {
-        Duration = 1;
-        Price = 5000;
-        Rating = 0;
-        DestinationsCount = "1";
-        SelectedTypes = new HashSet<string>();
+        SelectedDestination = null;
+        SelectedStartDate = null;
+        Duration = MinDuration;
+        MinPrice = 0;
+        MaxPrice = 5000;
+        Rating = 1.0;
+        DestinationsCount = DestinationCountEnum.Single;
+        SelectedTypes = new HashSet<TourTypeEnum>();
         WithGuide = PrivateTour = GroupTour = false;
         OnSale = StartsSoon = SpecialDiscount = false;
+        ApplyFilters();
     }
 
-    private string TextValue;
-
-    private List<TourDto> AllTours = new(); // Should be fetched from backend
-    private List<TourDto> FilteredTours = new();
-
-    protected override void OnInitialized()
+    private async Task<IEnumerable<string>> SearchDestinations(string value, CancellationToken stoppingToken)
     {
-        // Simulated data; in real app, fetch from backend
-        AllTours = new()
-        {
-            new TourDto("Belgium Explorer", new[] { "Brugge", "Liege", "Bruxelles" }, 7, 1200, "tour1.jpg"),
-            new TourDto("Ukrainian Retreat", new[] { "Lviv", "Truskavets" }, 5, 900, "tour2.jpg"),
-        };
+        if (string.IsNullOrWhiteSpace(value))
+            return AllDestinations.Select(l => l.Name);
+        return AllDestinations.Where(x => x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase))
+                            .Select(l => l.Name);
+    }
 
+    private void OnFilterChanged(int value)
+    {
+        PageIndex = 0;
         ApplyFilters();
     }
 
     private void ApplyFilters()
     {
-        FilteredTours = AllTours
-            .Where(t => t.Duration <= Duration && t.Price <= Price && t.Rating >= Rating)
-            .ToList();
-    }
-
-    public class TourDto
-    {
-        public string Title { get; set; }
-        public IEnumerable<string> Destinations { get; set; }
-        public int Duration { get; set; }
-        public int Price { get; set; }
-        public int Rating { get; set; } = 4;
-        public string ImageUrl { get; set; }
-
-        public TourDto(string title, IEnumerable<string> destinations, int duration, int price, string imageUrl)
+        IEnumerable<Tour> query = AllTours;
+        if (!string.IsNullOrWhiteSpace(SelectedDestination))
+            query = query.Where(t => t.Locations.Any(loc => loc.Name.Contains(SelectedDestination, StringComparison.InvariantCultureIgnoreCase)));
+        if (SelectedStartDate.HasValue)
+            query = query.Where(t => t.StartDate.Date == SelectedStartDate.Value.Date);
+        if (Duration > 0)
+            query = query.Where(t => (t.EndDate - t.StartDate).TotalDays <= Duration);
+        if (MinPrice > 0 || MaxPrice < 5000)
+            query = query.Where(t => t.Price >= MinPrice && t.Price <= MaxPrice);
+        if (Rating > 0)
+            query = query.Where(t => t.Rating >= Rating);
+        switch (DestinationsCount)
         {
-            Title = title;
-            Destinations = destinations;
-            Duration = duration;
-            Price = price;
-            ImageUrl = imageUrl;
+            case DestinationCountEnum.Single:
+                query = query.Where(t => t.Locations.Count == 1);
+                break;
+            case DestinationCountEnum.TwoToThree:
+                query = query.Where(t => t.Locations.Count >= 2 && t.Locations.Count <= 3);
+                break;
+            case DestinationCountEnum.FourOrMore:
+                query = query.Where(t => t.Locations.Count >= 4);
+                break;
         }
+        if (SelectedTypes.Any())
+            query = query.Where(t => SelectedTypes.Contains(t.TourType));
+        if (WithGuide)
+            query = query.Where(t => t.WithGuide);
+        if (PrivateTour)
+            query = query.Where(t => t.PrivateTour);
+        if (GroupTour)
+            query = query.Where(t => t.GroupTour);
+        if (OnSale)
+            query = query.Where(t => t.OnSale);
+        if (StartsSoon)
+            query = query.Where(t => (t.StartDate - DateTime.Now).TotalDays <= 14 && (t.StartDate - DateTime.Now).TotalDays >= 0);
+        if (SpecialDiscount)
+            query = query.Where(t => t.SpecialDiscount);
+        FilteredTours = query.ToList();
+        // Sorting
+        switch (SortBy)
+        {
+            case "price":
+                FilteredTours = FilteredTours.OrderBy(t => t.Price).ToList();
+                break;
+            case "rating":
+                FilteredTours = FilteredTours.OrderByDescending(t => t.Rating).ToList();
+                break;
+            case "duration":
+                FilteredTours = FilteredTours.OrderBy(t => (t.EndDate - t.StartDate).TotalDays).ToList();
+                break;
+            case "startdate":
+                FilteredTours = FilteredTours.OrderBy(t => t.StartDate).ToList();
+                break;
+        }
+        UpdatePagedTours();
     }
+
+    private void UpdatePagedTours()
+    {
+        PagedTours = FilteredTours.Skip(PageIndex * PageSize).Take(PageSize).ToList();
+    }
+
+    private void OnPageChanged(int page)
+    {
+        PageIndex = page;
+        UpdatePagedTours();
+    }
+
+    private void OnSortChanged(string value)
+    {
+        SortBy = value;
+        PageIndex = 0;
+        ApplyFilters();
+    }
+
+    // Helper for displaying a tour card
+    private RenderFragment TourCard(Tour tour) => __builder =>
+    {
+        <MudCard>
+            <MudCardMedia Image="@(string.IsNullOrEmpty(tour.ImageUrl) ? "https://via.placeholder.com/400x200?text=Tour" : tour.ImageUrl)" Height="180" />
+            <MudCardContent>
+                <MudText Typo="Typo.subtitle1">@tour.Title</MudText>
+                <MudText Typo="Typo.body2">@string.Join(", ", tour.Locations.Select(l => l.Name))</MudText>
+                <MudText Typo="Typo.caption">@tour.StartDate:dd MMM – @tour.EndDate:dd MMM • @((tour.EndDate - tour.StartDate).TotalDays) days</MudText>
+                <MudText Typo="Typo.caption">$@tour.Price</MudText>
+                <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudAvatar Size="Size.Small" Image="@tour.AuthorAvatarUrl" />
+                    <MudText Typo="Typo.caption">@tour.AuthorName</MudText>
+                </MudStack>
+                <MudRating Value="@tour.Rating" MaxValue="5" ReadOnly Size="Size.Small" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudIconButton Icon="@Icons.Material.Filled.FavoriteBorder" Disabled />
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => NavigateToTour(tour.Id)">Details</MudButton>
+            </MudCardActions>
+        </MudCard>;
+    };
+
+    private void NavigateToTour(int tourId)
+    {
+        Navigation.NavigateTo($"/tour/{tourId}");
+    }
+
+    // Mock data for development
+    private List<Tour> GetMockTours() => new()
+    {
+        new Tour
+        {
+            Id = 1,
+            Title = "Majestic Alps Tour",
+            Description = "Explore the Alps...",
+            ImageUrl = "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+            AuthorName = "Anna Müller",
+            AuthorAvatarUrl = "https://randomuser.me/api/portraits/women/1.jpg",
+            Locations = new List<Location> 
+            { 
+                new Location { GeoId = 1, Name = "Chamonix", CountryCode = "FR" },
+                new Location { GeoId = 2, Name = "Zermatt", CountryCode = "CH" },
+                new Location { GeoId = 3, Name = "St. Moritz", CountryCode = "CH" }
+            },
+            StartDate = DateTime.Now.AddDays(10),
+            EndDate = DateTime.Now.AddDays(17),
+            Price = 2500,
+            TourType = TourTypeEnum.Hiking,
+            Rating = 4.8,
+            WithGuide = true,
+            PrivateTour = false,
+            GroupTour = true,
+            OnSale = true,
+            SpecialDiscount = false,
+            SpecialOffers = SpecialOfferEnum.OnSale,
+            Country = "Switzerland"
+        },
+        new Tour
+        {
+            Id = 2,
+            Title = "Scenic Italy Journey",
+            Description = "Discover Italy...",
+            ImageUrl = "https://images.unsplash.com/photo-1464983953574-0892a716854b",
+            AuthorName = "Roberto Russo",
+            AuthorAvatarUrl = "https://randomuser.me/api/portraits/men/2.jpg",
+            Locations = new List<Location>
+            {
+                new Location { GeoId = 4, Name = "Rome", CountryCode = "IT" },
+                new Location { GeoId = 5, Name = "Florence", CountryCode = "IT" },
+                new Location { GeoId = 6, Name = "Venice", CountryCode = "IT" }
+            },
+            StartDate = DateTime.Now.AddDays(20),
+            EndDate = DateTime.Now.AddDays(30),
+            Price = 3200,
+            TourType = TourTypeEnum.Sightseeing,
+            Rating = 4.5,
+            WithGuide = true,
+            PrivateTour = true,
+            GroupTour = false,
+            OnSale = false,
+            SpecialDiscount = true,
+            SpecialOffers = SpecialOfferEnum.SpecialDiscount,
+            Country = "Italy"
+        },
+        new Tour
+        {
+            Id = 3,
+            Title = "Norwegian Fjords Adventure",
+            Description = "Sail the fjords...",
+            ImageUrl = "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",
+            AuthorName = "Erik Johansen",
+            AuthorAvatarUrl = "https://randomuser.me/api/portraits/men/3.jpg",
+            Locations = new List<Location>
+            {
+                new Location { GeoId = 7, Name = "Bergen", CountryCode = "NO" },
+                new Location { GeoId = 8, Name = "Fiam", CountryCode = "NO" },
+                new Location { GeoId = 9, Name = "Geiranger", CountryCode = "NO" }
+            },
+            StartDate = DateTime.Now.AddDays(40),
+            EndDate = DateTime.Now.AddDays(48),
+            Price = 4100,
+            TourType = TourTypeEnum.Recreational,
+            Rating = 4.9,
+            WithGuide = false,
+            PrivateTour = false,
+            GroupTour = true,
+            OnSale = false,
+            SpecialDiscount = false,
+            SpecialOffers = SpecialOfferEnum.None,
+            Country = "Norway"
+        },
+        new Tour
+        {
+            Id = 4,
+            Title = "Highlights of Belgium",
+            Description = "See the best of Belgium...",
+            ImageUrl = "https://images.unsplash.com/photo-1502082553048-f009c37129b9",
+            AuthorName = "Sophie Dubois",
+            AuthorAvatarUrl = "https://randomuser.me/api/portraits/women/4.jpg",
+            Locations = new List<Location>
+            {
+                new Location { GeoId = 10, Name = "Bruges", CountryCode = "BE" },
+                new Location { GeoId = 11, Name = "Liege", CountryCode = "BE" },
+                new Location { GeoId = 12, Name = "Brussels", CountryCode = "BE" }
+            },
+            StartDate = DateTime.Now.AddDays(5),
+            EndDate = DateTime.Now.AddDays(10),
+            Price = 1800,
+            TourType = TourTypeEnum.Mixed,
+            Rating = 4.2,
+            WithGuide = true,
+            PrivateTour = false,
+            GroupTour = true,
+            OnSale = true,
+            SpecialDiscount = false,
+            SpecialOffers = SpecialOfferEnum.OnSale,
+            Country = "Belgium"
+        }
+    };
 }
