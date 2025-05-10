@@ -38,7 +38,10 @@ public class Globals
             {
                 return;
             }
-            Localizations = JsonSerializer.Deserialize<Dictionary<string, string>>(result);
+            Localizations = JsonSerializer.Deserialize<Dictionary<string, string>>(result, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
         }
         using (var cli = new HttpClient())
         {
@@ -48,7 +51,11 @@ public class Globals
             {
                 return;
             }
-            LocaleLocalizations = JsonSerializer.Deserialize<List<LanguageLocationsDto>>(result).ToDictionary(x => x.GeoId);
+
+            LocaleLocalizations = JsonSerializer.Deserialize<Dictionary<int, LanguageLocationsDto>>(result, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
         }
 
         Notify();

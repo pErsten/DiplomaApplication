@@ -35,7 +35,11 @@ public static class ToursController
             return Results.BadRequest($"Page size must be between 1 and {Constants.MaxPageSize}");
         }
 
-        var query = dbContext.TourInstances.AsQueryable();
+        var query = dbContext.TourInstances
+            .Include(x => x.Tour)
+            .ThenInclude(x => x.Guide)
+            .ThenInclude(x => x.Account)
+            .AsQueryable();
         
         if (filters.SelectedDestination.HasValue)
         {

@@ -38,16 +38,31 @@ public class SqlContext : DbContext
             }));
             SaveChanges();
         }
-        if (Tours.Any())
-        {
-            return; // Database already seeded
-        }
 
-        // Get a guide for the tours
+        // Create a test guide if none exists
         var guide = Guides.FirstOrDefault();
         if (guide == null)
         {
-            return; // Can't seed tours without a guide
+            // First create an account for the guide
+            var guideAccount = Accounts.Where(x => x.Login == "cc").First();
+
+            // Then create the guide
+            guide = new Guide
+            {
+                Name = "John",
+                Surname = "Smith",
+                Age = 35,
+                CareerStartUtc = DateTime.UtcNow.AddYears(-10),
+                IsActive = true,
+                AccountId = guideAccount.Id
+            };
+            Guides.Add(guide);
+            SaveChanges();
+        }
+
+        if (Tours.Any())
+        {
+            return; // Database already seeded
         }
 
         var tours = new List<Tour>

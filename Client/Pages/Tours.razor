@@ -106,7 +106,10 @@
                                          @bind-SelectedValues="Filters.TourTypes">
                                     @foreach (TourTypeEnum type in Enum.GetValues(typeof(TourTypeEnum)))
                                     {
-                                        <MudSelectItem Value="@type">@globals.Localizations[$"TourType_{type}"]</MudSelectItem>
+                                        @if (type != TourTypeEnum.None)
+                                        {
+                                            <MudSelectItem Value="@type">@globals.Localizations[$"TourType_{type}"]</MudSelectItem>
+                                        }
                                     }
                                 </MudSelect>
 
@@ -201,7 +204,16 @@
     // Filter state
     private bool ShowFilter;
     private int SelectedDestination;
-    private TourFiltersDto Filters;
+    private TourFiltersDto Filters = new TourFiltersDto
+    {
+        Status = TourInstanceStatus.None,
+        TourTypes = new List<TourTypeEnum>(),
+        FromDurationDays = 1,
+        ToDurationDays = int.MaxValue,
+        FromPrice = 0M,
+        ToPrice = decimal.MaxValue,
+        MinRating = 1.0d
+    };
     private bool IsLoading = true;
 
     // Range values
@@ -252,16 +264,10 @@
             MaxPossibleDuration = toursResponse.MaxDuration;
             MinPossiblePrice = toursResponse.MinPrice;
             MaxPossiblePrice = toursResponse.MaxPrice;
-            Filters = new TourFiltersDto
-            {
-                Status = TourInstanceStatus.None,
-                TourTypes = new List<TourTypeEnum>(),
-                FromDurationDays = MinPossibleDuration,
-                ToDurationDays = MaxPossibleDuration,
-                FromPrice = MinPossiblePrice,
-                ToPrice = MaxPossiblePrice,
-                MinRating = 1.0d
-            };
+            Filters.FromDurationDays = MinPossibleDuration;
+            Filters.ToDurationDays = MaxPossibleDuration;
+            Filters.FromPrice = MinPossiblePrice;
+            Filters.ToPrice = MaxPossiblePrice;
             Filters.SortBy = SortBy;
             Filters.SelectedDestination = SelectedDestination;
         }
@@ -287,10 +293,11 @@
         {
             Status = TourInstanceStatus.None,
             TourTypes = new List<TourTypeEnum>(),
-            FromDurationDays = MinPossibleDuration,
-            ToDurationDays = MaxPossibleDuration,
-            FromPrice = MinPossiblePrice,
-            ToPrice = MaxPossiblePrice
+            FromDurationDays = 1,
+            ToDurationDays = int.MaxValue,
+            FromPrice = 0M,
+            ToPrice = decimal.MaxValue,
+            MinRating = 1.0d
         };
         ApplyFilters();
     }
@@ -332,17 +339,20 @@
                 <MudText Typo="Typo.body2">@string.Join(", ", tour.Locations.Select(l => globals.LocaleLocalizations[l].City))</MudText>
                 <MudText Typo="Typo.caption">@tour.DurationDays @globals.Localizations["Tours_Filter_Days"]</MudText>
                 <MudText Typo="Typo.caption">$@tour.Price</MudText>
-                <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1">
-                    <MudAvatar Size="Size.Small" Image="@tour.GuideAvatarUrl" />
+                <MudDivider Class="my-2" />
+                <MudStack Row=true AlignItems="AlignItems.Center" Spacing="2">
+                    <MudAvatar Size="Size.Small">
+                        <MudImage Src=@tour.GuideAvatarUrl></MudImage>
+                    </MudAvatar>
                     <MudText Typo="Typo.caption">@tour.GuideName @tour.GuideSurname</MudText>
+                    <MudChip T="string" Color=@(GetStatusColor(tour.Status)) Size="Size.Small" Class="ml-auto">
+                        @globals.Localizations[$"TourStatus_{tour.Status}"]
+                    </MudChip>
                 </MudStack>
-                <MudChip T="string" Color=@(GetStatusColor(tour.Status)) Size="Size.Small" Class="mt-2">
-                    @globals.Localizations[$"TourStatus_{tour.Status}"]
-                </MudChip>
             </MudCardContent>
             <MudCardActions>
                 <MudIconButton Icon="@Icons.Material.Filled.FavoriteBorder" Disabled />
-                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => NavigateToTour(tour.Id)">Details</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => NavigateToTour(tour.Id)">@globals.Localizations["UI_Details"]</MudButton>
             </MudCardActions>
         </MudCard>;
     };

@@ -42,6 +42,6 @@ public static class LocalizationController
         }
 
         var res = await cache.GetLocationLocalizations(localization, stoppingToken);
-        return Results.Ok(res.Values.ToList());
+        return Results.Ok(res);
     }
 }
