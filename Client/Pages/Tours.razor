@@ -1,4 +1,5 @@
 ﻿@page "/tours"
+@using System.Net.Http.Headers
 @using Shared.Model
 @using Shared.Model.Dtos
 @using System.Text.Json
@@ -145,14 +146,36 @@
     <!-- Featured Tours -->
     <MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
         <MudText Typo="Typo.h5" Class="mb-4">@globals.Localizations["Tours_FeaturedTours"]</MudText>
-        <MudGrid GutterSize="3">
-            @foreach (var tour in AllTours.Take(3))
+        @if (IsLoadingRecommendations)
+        {
+            <MudProgressCircular Indeterminate Color="Color.Primary" />
+        }
+        else if (RecommendedTours.Any())
+        {
+            <MudGrid GutterSize="3">
+                @foreach (var tour in RecommendedTours)
+                {
+                    <MudItem xs="12" sm="6" md="4">
+                        @TourInstanceCard(tour)
+                    </MudItem>
+                }
+            </MudGrid>
+            @if (!string.IsNullOrEmpty(RecommendationReason))
             {
-                <MudItem xs="12" sm="6" md="4">
-                    @TourInstanceCard(tour)
-                </MudItem>
+                <MudText Typo="Typo.body2" Class="mt-2 text-muted">@RecommendationReason</MudText>
             }
-        </MudGrid>
+        }
+        else
+        {
+            <MudGrid GutterSize="3">
+                @foreach (var tour in AllTours.Take(3))
+                {
+                    <MudItem xs="12" sm="6" md="4">
+                        @TourInstanceCard(tour)
+                    </MudItem>
+                }
+            </MudGrid>
+        }
     </MudContainer>
 </MudContainer>
 
@@ -218,9 +241,13 @@
     private int PageSize = 6;
     private string SortBy = "price";
 
+    private List<TourDto> RecommendedTours = new();
+    private string RecommendationReason = string.Empty;
+    private bool IsLoadingRecommendations = true;
+
     protected override async Task OnInitializedAsync()
     {
-        await LoadData();
+        await Task.WhenAll(LoadData(), LoadRecommendations());
     }
 
     private async Task LoadData()
@@ -267,6 +294,48 @@
         finally
         {
             IsLoading = false;
+        }
+    }
+
+    private async Task LoadRecommendations()
+    {
+        if (string.IsNullOrEmpty(globals.Token))
+        {
+            IsLoadingRecommendations = false;
+            return;
+        }
+
+        try
+        {
+            var serverUrl = Configuration.GetValue<string>("ServerUrl");
+            using var cli = new HttpClient();
+            cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.Token);
+
+            var response = await cli.GetAsync($"{serverUrl}/Tours/GetRecommendations");
+            var result = await response.Content.ReadAsStringAsync();
+            
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var recommendation = JsonSerializer.Deserialize<TourRecommendationResponseDto>(result, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (recommendation != null)
+                {
+                    RecommendedTours = recommendation.RecommendedTours;
+                    RecommendationReason = recommendation.RecommendationReason;
+                }
+            }
+        }
+        catch (Exception)
+        {
+            RecommendedTours.Clear();
+            RecommendationReason = string.Empty;
+        }
+        finally
+        {
+            IsLoadingRecommendations = false;
         }
     }
     
