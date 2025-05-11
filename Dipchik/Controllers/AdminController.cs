@@ -7,9 +7,13 @@ namespace Dipchik.Controllers;
 
 public static class AdminController
 {
-    public static IEndpointRouteBuilder AddAdminController(this IEndpointRouteBuilder builder)
+    public static IEndpointRouteBuilder AddAdminController(this IEndpointRouteBuilder builder, params AccountRolesEnum[] roleRequirements)
     {
         var group = builder.MapGroup("Admin");
+        foreach (var role in roleRequirements)
+        {
+            group.RequireAuthorization(role.ToString());
+        }
 
         group.MapGet("/updateLocationsLocalizations", UpdateLocationsLocalizations);
         group.MapGet("/getAllDisplayLocalizations", GetAllDisplayLocalizations);

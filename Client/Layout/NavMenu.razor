@@ -32,6 +32,11 @@
         </div>
         @if (globals.IsLoggedIn)
         {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="my-bookings">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> @globals.Localizations["Navbar_MyBookings"]
+                </NavLink>
+            </div>
             if (globals.User!.HasRole(AccountRolesEnum.Modify))
             {
                 <div class="nav-item px-3">

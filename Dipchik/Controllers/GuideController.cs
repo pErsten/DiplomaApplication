@@ -9,9 +9,13 @@ namespace Dipchik.Controllers;
 
 public static class GuideController
 {
-    public static IEndpointRouteBuilder AddGuideController(this IEndpointRouteBuilder builder)
+    public static IEndpointRouteBuilder AddGuideController(this IEndpointRouteBuilder builder, params AccountRolesEnum[] roleRequirements)
     {
         var group = builder.MapGroup("Guide");
+        foreach (var role in roleRequirements)
+        {
+            group.RequireAuthorization(role.ToString());
+        }
 
         group.MapGet("GetTours", GetGuideTours);
         group.MapGet("GetTourInstances", GetGuideTourInstances);
@@ -100,7 +104,7 @@ public static class GuideController
             EndDate = tour.EndDate,
             Rating = tour.Rating ?? 0d,
             MaxParticipants = tour.MaxParticipants,
-            CurrentParticipants = tour.CurrentParticipants,
+            CurrentParticipants = tour.Bookings.Count,
             GuideName = tour.Tour.Guide.Name,
             GuideSurname = tour.Tour.Guide.Surname,
             GuideAvatarUrl = tour.Tour.Guide.Account.AvatarUrl,

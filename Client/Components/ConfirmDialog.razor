@@ -1,21 +1,20 @@
-@using MudBlazor
-
 <MudDialog>
     <DialogContent>
         <MudText>@ContentText</MudText>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="@Color" Variant="Variant.Filled" OnClick="Submit">@ButtonText</MudButton>
+        <MudButton OnClick="Cancel">@CancelButtonText</MudButton>
+        <MudButton Color=@Color Variant="Variant.Filled" OnClick="Submit">@ConfirmButtonText</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
-    [CascadingParameter] MudDialog MudDialog { get; set; } = null!;
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public string ContentText { get; set; } = "";
-    [Parameter] public string ButtonText { get; set; } = "Confirm";
-    [Parameter] public Color Color { get; set; } = Color.Primary;
+    [Parameter] public string ConfirmButtonText { get; set; } = "Confirm";
+    [Parameter] public string CancelButtonText { get; set; } = "Cancel";
+    [Parameter] public Color Color { get; set; } = Color.Error;
 
-    async Task Submit() => await MudDialog.CloseAsync(DialogResult.Ok(true));
-    async Task Cancel() => await MudDialog.CloseAsync();
+    void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    void Cancel() => MudDialog.Close(DialogResult.Cancel());
 } 

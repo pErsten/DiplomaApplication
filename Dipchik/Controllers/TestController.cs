@@ -6,9 +6,13 @@ namespace Dipchik.Controllers;
 
 public static class TestController
 {
-    public static IEndpointRouteBuilder AddTestController(this IEndpointRouteBuilder builder)
+    public static IEndpointRouteBuilder AddTestController(this IEndpointRouteBuilder builder, params AccountRolesEnum[] roleRequirements)
     {
         var group = builder.MapGroup("Test");
+        foreach (var role in roleRequirements)
+        {
+            group.RequireAuthorization(role.ToString());
+        }
 
         group.MapGet("/getLocationLocalizations", GetLocationLocalizations);
         group.MapGet("/deleteLocationLocalizations", DeleteLocationLocalizations);

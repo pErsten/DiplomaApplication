@@ -2,6 +2,7 @@ using Serilog.Events;
 using Serilog;
 using Dipchik;
 using Dipchik.Controllers;
+using Shared.Model;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,8 +47,9 @@ if (app.Environment.IsDevelopment())
 
 // Auth controllers
 var authEPs = app.MapGroup("/").RequireAuthorization().WithOpenApi();
-authEPs.AddAccountController();
-authEPs/*.RequireAuthorization(x => x.RequireRole(AccountRolesEnum.Modify.ToString()))*/.AddAdminController();
-authEPs/*.RequireAuthorization(x => x.RequireRole(AccountRolesEnum.Guide.ToString()))*/.AddGuideController();
+authEPs.AddAccountController(AccountRolesEnum.Client);
+authEPs.AddBookingController(AccountRolesEnum.Client);
+authEPs.AddAdminController(AccountRolesEnum.Client, AccountRolesEnum.Modify);
+authEPs.AddGuideController(AccountRolesEnum.Client, AccountRolesEnum.Guide);
 
 app.Run();

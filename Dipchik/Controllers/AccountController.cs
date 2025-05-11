@@ -12,9 +12,13 @@ namespace Dipchik.Controllers;
 
 public static class AccountController
 {
-    public static IEndpointRouteBuilder AddAccountController(this IEndpointRouteBuilder builder)
+    public static IEndpointRouteBuilder AddAccountController(this IEndpointRouteBuilder builder, params AccountRolesEnum[] roleRequirements)
     {
         var group = builder.MapGroup("Account");
+        foreach (var role in roleRequirements)
+        {
+            group.RequireAuthorization(role.ToString());
+        }
 
         group.MapGet("/GetAccountInfo", GetAccountInfo);
         group.MapGet("/DeleteAccount", DeleteAccount);

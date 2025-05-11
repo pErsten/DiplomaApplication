@@ -124,7 +124,7 @@
             using var cli = new HttpClient();
             cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.Token);
 
-            var response = await cli.PostAsync($"{serverUrl}/Tours/BookTour/{InstanceId}?participants={SelectedParticipants}", null);
+            var response = await cli.GetAsync($"{serverUrl}/Booking/BookTour?id={InstanceId}");
             var result = await response.Content.ReadAsStringAsync();
             
             if (response.StatusCode != System.Net.HttpStatusCode.OK)

@@ -17,7 +17,5 @@ public class TourDto
     public string GuideName { get; set; }
     public string GuideSurname { get; set; }
     public string GuideAvatarUrl { get; set; }
-    public bool IsActive { get; set; }
-    public TourInstanceStatus Status { get; set; }
     public TourClassificationEnum Classification { get; set; }
 } 

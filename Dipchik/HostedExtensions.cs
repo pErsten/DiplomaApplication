@@ -84,16 +84,23 @@ namespace Dipchik
 
             services.AddAuthorization(options =>
             {
-                options.AddPolicy(AccountRolesEnum.Modify.ToString(), policy => policy.RequireAssertion(context =>
+                foreach (AccountRolesEnum elem in Enum.GetValues<AccountRolesEnum>())
                 {
-                    var rolesClaim = context.User.FindFirst(ClaimTypes.Role)?.Value;
-                    if (string.IsNullOrEmpty(rolesClaim)) 
-                        return false;
-                    if (!int.TryParse(rolesClaim, out var roleFlags))
-                        return false;
+                    if (elem == AccountRolesEnum.None)
+                    {
+                        continue;
+                    }
+                    options.AddPolicy(elem.ToString(), policy => policy.RequireAssertion(context =>
+                    {
+                        var rolesClaim = context.User.FindFirst(ClaimTypes.Role)?.Value;
+                        if (string.IsNullOrEmpty(rolesClaim)) 
+                            return false;
+                        if (!int.TryParse(rolesClaim, out var roleFlags))
+                            return false;
 
-                    return (roleFlags | (int)AccountRolesEnum.Modify) > 0;
-                }));
+                        return (roleFlags & (int)elem) > 0;
+                    }));
+                }
             });
             services.AddSignalR();
             var webClientUrl = builder.Configuration.GetValue<string>("WebClientUrl");

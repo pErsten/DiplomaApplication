@@ -23,6 +23,7 @@ public class SqlContext : DbContext
     public DbSet<TourInstance> TourInstances { get; set; }
     public DbSet<TourInstanceRate> TourInstanceRates { get; set; }
     public DbSet<Guide> Guides { get; set; }
+    public DbSet<TourBooking> TourBookings { get; set; }
 
     private void SeedTours()
     {
@@ -86,8 +87,7 @@ public class SqlContext : DbContext
                             StartDate = DateTime.UtcNow.AddDays(10),
                             EndDate = DateTime.UtcNow.AddDays(17),
                             Status = TourInstanceStatus.Scheduled,
-                            MaxParticipants = 20,
-                            CurrentParticipants = 0
+                            MaxParticipants = 20
                         }
                     }
                 },
@@ -113,8 +113,7 @@ public class SqlContext : DbContext
                             StartDate = DateTime.UtcNow.AddDays(20),
                             EndDate = DateTime.UtcNow.AddDays(30),
                             Status = TourInstanceStatus.Scheduled,
-                            MaxParticipants = 15,
-                            CurrentParticipants = 0
+                            MaxParticipants = 15
                         }
                     }
                 },
@@ -140,8 +139,7 @@ public class SqlContext : DbContext
                             StartDate = DateTime.UtcNow.AddDays(40),
                             EndDate = DateTime.UtcNow.AddDays(48),
                             Status = TourInstanceStatus.Scheduled,
-                            MaxParticipants = 30,
-                            CurrentParticipants = 0,
+                            MaxParticipants = 30
                         }
                     }
                 },
@@ -167,8 +165,7 @@ public class SqlContext : DbContext
                             StartDate = DateTime.UtcNow.AddDays(5),
                             EndDate = DateTime.UtcNow.AddDays(10),
                             Status = TourInstanceStatus.Scheduled,
-                            MaxParticipants = 25,
-                            CurrentParticipants = 0
+                            MaxParticipants = 25
                         }
                     }
                 }

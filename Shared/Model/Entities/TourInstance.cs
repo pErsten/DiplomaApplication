@@ -20,10 +20,10 @@ public class TourInstance
     // Instance status
     public TourInstanceStatus Status { get; set; }
     public int MaxParticipants { get; set; }
-    public int CurrentParticipants { get; set; }
 
     // Navigation property for rates
     public List<TourInstanceRate> Rates { get; set; } = new();
+    public List<TourBooking> Bookings { get; set; } = new();
 
     // Computed property for average rating
     public double? Rating => Rates.Any() ? Rates.Average(r => r.Rate / 10.0) : null;

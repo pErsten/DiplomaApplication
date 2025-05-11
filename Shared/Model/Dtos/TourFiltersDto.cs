@@ -2,7 +2,6 @@ namespace Shared.Model.Dtos;
 
 public class TourFiltersDto
 {
-    public TourInstanceStatus Status { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public decimal FromPrice { get; set; }

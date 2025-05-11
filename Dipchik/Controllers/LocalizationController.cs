@@ -5,9 +5,13 @@ namespace Dipchik.Controllers;
 
 public static class LocalizationController
 {
-    public static IEndpointRouteBuilder AddLocalizationController(this IEndpointRouteBuilder builder)
+    public static IEndpointRouteBuilder AddLocalizationController(this IEndpointRouteBuilder builder, params AccountRolesEnum[] roleRequirements)
     {
         var group = builder.MapGroup("localization");
+        foreach (var role in roleRequirements)
+        {
+            group.RequireAuthorization(role.ToString());
+        }
 
         group.MapGet("/LoadDisplayLocalization", LoadDisplayLocalization);
         group.MapGet("/LoadLocationLocalization", LoadLocationLocalization);

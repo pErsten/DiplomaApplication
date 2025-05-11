@@ -8,16 +8,20 @@ namespace Dipchik.Controllers;
 
 public static class ToursController
 {
-    public static IEndpointRouteBuilder AddToursController(this IEndpointRouteBuilder builder)
+    public static IEndpointRouteBuilder AddToursController(this IEndpointRouteBuilder builder, params AccountRolesEnum[] roleRequirements)
     {
         var group = builder.MapGroup("Tours");
+        foreach (var role in roleRequirements)
+        {
+            group.RequireAuthorization(role.ToString());
+        }
 
         group.MapPost("/GetAll", GetAllTours);
         group.MapGet("/GetById/{id}", GetTourById);
 
         return builder;
     }
-
+    
     public static async Task<IResult> GetAllTours(
         SqlContext dbContext,
         [FromQuery] int page,
@@ -36,6 +40,7 @@ public static class ToursController
         }
 
         var query = dbContext.TourInstances
+            .Where(x => x.Status == TourInstanceStatus.Scheduled)
             .Include(x => x.Tour)
             .ThenInclude(x => x.Guide)
             .ThenInclude(x => x.Account)
@@ -103,11 +108,6 @@ public static class ToursController
         }
 
         // Apply instance-level filters
-        if (filters.Status != TourInstanceStatus.None)
-        {
-            query = query.Where(i => i.Status == filters.Status);
-        }
-
         if (filters.StartDate.HasValue)
         {
             query = query.Where(i => i.StartDate.Date == filters.StartDate.Value.Date);
@@ -163,8 +163,6 @@ public static class ToursController
             GuideName = t.Tour.Guide.Name,
             GuideSurname = t.Tour.Guide.Surname,
             GuideAvatarUrl = t.Tour.Guide.Account.AvatarUrl,
-            IsActive = t.Status == TourInstanceStatus.Scheduled,
-            Status = t.Status,
             Classification = t.Tour.Classification
         }).ToList();
 
@@ -211,7 +209,7 @@ public static class ToursController
             EndDate = tour.EndDate,
             Rating = tour.Rating ?? 0d,
             MaxParticipants = tour.MaxParticipants,
-            CurrentParticipants = tour.CurrentParticipants,
+            CurrentParticipants = tour.Bookings.Count,
             GuideName = tour.Tour.Guide.Name,
             GuideSurname = tour.Tour.Guide.Surname,
             GuideAvatarUrl = tour.Tour.Guide.Account.AvatarUrl,

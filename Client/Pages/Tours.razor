@@ -134,16 +134,6 @@
                                 <MudCheckBox T=bool @bind-Checked="Filters.OnSale" Label="@globals.Localizations["Tours_Filter_OnSale"]" />
                                 <MudCheckBox T=bool @bind-Checked="Filters.StartsSoon" Label="@globals.Localizations["Tours_Filter_StartsSoon"]" />
                                 <MudCheckBox T=bool @bind-Checked="Filters.SpecialDiscount" Label="@globals.Localizations["Tours_Filter_SpecialDiscount"]" />
-
-                                <!-- Tour Status -->
-                                <MudText Typo="Typo.subtitle2">@globals.Localizations["Tours_Filter_Status"]</MudText>
-                                <MudSelect T="TourInstanceStatus" @bind-Value="Filters.Status">
-                                    <MudSelectItem Value="@TourInstanceStatus.None">@globals.Localizations["Tours_Filter_AllStatuses"]</MudSelectItem>
-                                    <MudSelectItem Value="@TourInstanceStatus.Scheduled">@globals.Localizations["TourStatus_Scheduled"]</MudSelectItem>
-                                    <MudSelectItem Value="@TourInstanceStatus.Completed">@globals.Localizations["TourStatus_Completed"]</MudSelectItem>
-                                    <MudSelectItem Value="@TourInstanceStatus.Cancelled">@globals.Localizations["TourStatus_Cancelled"]</MudSelectItem>
-                                    <MudSelectItem Value="@TourInstanceStatus.FullyBooked">@globals.Localizations["TourStatus_FullyBooked"]</MudSelectItem>
-                                </MudSelect>
                             </MudStack>
                         }
                     </MudPaper>
@@ -206,7 +196,6 @@
     private int SelectedDestination;
     private TourFiltersDto Filters = new TourFiltersDto
     {
-        Status = TourInstanceStatus.None,
         TourTypes = new List<TourTypeEnum>(),
         FromDurationDays = 1,
         ToDurationDays = int.MaxValue,
@@ -291,7 +280,6 @@
         SelectedDestination = 0;
         Filters = new TourFiltersDto
         {
-            Status = TourInstanceStatus.None,
             TourTypes = new List<TourTypeEnum>(),
             FromDurationDays = 1,
             ToDurationDays = int.MaxValue,
@@ -345,9 +333,6 @@
                         <MudImage Src=@tour.GuideAvatarUrl></MudImage>
                     </MudAvatar>
                     <MudText Typo="Typo.caption">@tour.GuideName @tour.GuideSurname</MudText>
-                    <MudChip T="string" Color=@(GetStatusColor(tour.Status)) Size="Size.Small" Class="ml-auto">
-                        @globals.Localizations[$"TourStatus_{tour.Status}"]
-                    </MudChip>
                 </MudStack>
             </MudCardContent>
             <MudCardActions>

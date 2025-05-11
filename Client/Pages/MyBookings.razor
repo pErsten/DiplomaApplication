@@ -1,0 +1,160 @@
+@page "/my-bookings"
+@using System.Net.Http.Headers
+@using System.Text.Json
+@using Client.Components
+@using Shared.Model.Dtos
+@inject IConfiguration Configuration
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>My Bookings</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@globals.Localizations["MyBookings_Title"]</MudText>
+
+    @if (_bookings == null)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (!_bookings.Any())
+    {
+        <MudAlert Severity="Severity.Info">@globals.Localizations["MyBookings_NoBookings"]</MudAlert>
+    }
+    else
+    {
+        <MudTable Items="@_bookings" Dense="true" Hover="true" Bordered="true" Striped="true">
+            <HeaderContent>
+                <MudTh>@globals.Localizations["MyBookings_TourTitle"]</MudTh>
+                <MudTh>@globals.Localizations["MyBookings_StartDate"]</MudTh>
+                <MudTh>@globals.Localizations["MyBookings_EndDate"]</MudTh>
+                <MudTh>@globals.Localizations["MyBookings_Price"]</MudTh>
+                <MudTh>@globals.Localizations["MyBookings_Status"]</MudTh>
+                <MudTh>@globals.Localizations["MyBookings_Actions"]</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="@globals.Localizations["MyBookings_TourTitle"]">
+                    <NavLink href=@($@"/tour/{context.TourInstanceId}")>
+                        @context.TourTitle
+                    </NavLink>
+                </MudTd>
+                <MudTd DataLabel="@globals.Localizations["MyBookings_StartDate"]">@context.StartDate.ToLocalTime().ToShortDateString()</MudTd>
+                <MudTd DataLabel="@globals.Localizations["MyBookings_EndDate"]">@context.EndDate.ToLocalTime().ToShortDateString()</MudTd>
+                <MudTd DataLabel="@globals.Localizations["MyBookings_Price"]">@context.TotalPrice.ToString("C")</MudTd>
+                <MudTd DataLabel="@globals.Localizations["MyBookings_Status"]">
+                    <MudChip T="string" Color="@GetStatusColor(context)" Size="Size.Small">
+                        @GetStatusText(context)
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="@globals.Localizations["MyBookings_Actions"]">
+                    @if (!context.IsCancelled && context.StartDate > DateTime.UtcNow)
+                    {
+                        <MudButton Variant="Variant.Text" 
+                        Color="Color.Error" 
+                        Size="Size.Small"
+                        OnClick="@(() => CancelBooking(context))"
+                        Disabled="@(context.StartDate <= DateTime.UtcNow.AddDays(1))">
+                            @globals.Localizations["MyBookings_Cancel"]
+                        </MudButton>
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudContainer>
+
+@code {
+    private List<BookingDto>? _bookings;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBookings();
+    }
+
+    private async Task LoadBookings()
+    {
+        try
+        {
+            var serverUrl = Configuration.GetValue<string>("ServerUrl");
+            using var cli = new HttpClient();
+            cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.Token);
+            var response = await cli.GetAsync($"{serverUrl}/Booking/GetMyBookings");
+            var result = await response.Content.ReadAsStringAsync();
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                _bookings = JsonSerializer.Deserialize<List<BookingDto>>(result, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+                StateHasChanged();
+            }
+            else
+            {
+                Snackbar.Add(globals.Localizations["Messages_FailedToLoad"], Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(globals.Localizations["Messages_FailedToLoad"], Severity.Error);
+        }
+    }
+
+    private async Task CancelBooking(BookingDto booking)
+    {
+        var parameters = new DialogParameters
+            {
+                ["ContentText"] = globals.Localizations["MyBookings_CancelConfirmation"],
+                ["ConfirmButtonText"] = globals.Localizations["UI_Yes"],
+                ["CancelButtonText"] = globals.Localizations["UI_No"]
+            };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(globals.Localizations["MyBookings_CancelBooking"], parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                var serverUrl = Configuration.GetValue<string>("ServerUrl");
+                using var cli = new HttpClient();
+                cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.Token);
+                var response = await cli.GetAsync($"{serverUrl}/Booking/CancelBooking?id={booking.Id}");
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    await LoadBookings();
+                    Snackbar.Add(globals.Localizations["Messages_BookingCancelled"], Severity.Success);
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    Snackbar.Add($"{globals.Localizations["Messages_FailedToCancel"]} - {error}", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(globals.Localizations["Messages_FailedToCancel"], Severity.Error);
+            }
+        }
+    }
+
+    private Color GetStatusColor(BookingDto context)
+    {
+        if (context.IsCancelled)
+            return Color.Error;
+        if (context.EndDate < DateTime.UtcNow)
+            return Color.Primary;
+        if (context.StartDate < DateTime.UtcNow)
+            return Color.Warning;
+
+        return Color.Success;
+    }
+    private string GetStatusText(BookingDto context)
+    {
+        if (context.IsCancelled)
+            return globals.Localizations["MyBookings_StatusCancelled"];
+        if (context.EndDate < DateTime.UtcNow)
+            return globals.Localizations["MyBookings_StatusPassed"];
+        if (context.StartDate < DateTime.UtcNow)
+            return globals.Localizations["MyBookings_StatusRunning"];
+
+        return globals.Localizations["MyBookings_StatusActive"];
+    }
+} 
