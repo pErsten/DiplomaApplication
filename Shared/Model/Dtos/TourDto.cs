@@ -12,8 +12,6 @@ public class TourDto
     public decimal Price { get; set; }
     public TourTypeEnum TourType { get; set; }
     public bool WithGuide { get; set; }
-    public bool PrivateTour { get; set; }
-    public bool GroupTour { get; set; }
     public SpecialOfferEnum SpecialOffers { get; set; }
     public int DurationDays { get; set; }
     public string GuideName { get; set; }
@@ -21,4 +19,5 @@ public class TourDto
     public string GuideAvatarUrl { get; set; }
     public bool IsActive { get; set; }
     public TourInstanceStatus Status { get; set; }
+    public TourClassificationEnum Classification { get; set; }
 } 

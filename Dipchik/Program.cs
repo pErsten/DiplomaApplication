@@ -47,7 +47,7 @@ if (app.Environment.IsDevelopment())
 // Auth controllers
 var authEPs = app.MapGroup("/").RequireAuthorization().WithOpenApi();
 authEPs.AddAccountController();
-//authEPs.RequireAuthorization(x => x.RequireRole(AccountRolesEnum.Modify.ToString())).AddAdminController();
-anonEPs.AddAdminController(); //TODO: change to authEPs
+authEPs/*.RequireAuthorization(x => x.RequireRole(AccountRolesEnum.Modify.ToString()))*/.AddAdminController();
+authEPs/*.RequireAuthorization(x => x.RequireRole(AccountRolesEnum.Guide.ToString()))*/.AddGuideController();
 
 app.Run();

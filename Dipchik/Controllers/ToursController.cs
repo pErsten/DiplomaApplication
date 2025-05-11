@@ -66,14 +66,14 @@ public static class ToursController
             query = query.Where(t => t.Tour.WithGuide == filters.WithGuide.Value);
         }
 
-        if (filters.PrivateTour.HasValue)
+        if (filters.PrivateTour == true)
         {
-            query = query.Where(t => t.Tour.PrivateTour == filters.PrivateTour.Value);
+            query = query.Where(t => (t.Tour.Classification == TourClassificationEnum.Private));
         }
 
-        if (filters.GroupTour.HasValue)
+        else if (filters.GroupTour == true)
         {
-            query = query.Where(t => t.Tour.GroupTour == filters.GroupTour.Value);
+            query = query.Where(t => t.Tour.Classification == TourClassificationEnum.Group);
         }
 
         if (filters.OnSale.HasValue && filters.OnSale.Value)
@@ -158,15 +158,14 @@ public static class ToursController
             Price = t.Tour.Price,
             TourType = t.Tour.TourType,
             WithGuide = t.Tour.WithGuide,
-            PrivateTour = t.Tour.PrivateTour,
-            GroupTour = t.Tour.GroupTour,
             SpecialOffers = t.Tour.SpecialOffers,
             DurationDays = t.Tour.DurationDays,
             GuideName = t.Tour.Guide.Name,
             GuideSurname = t.Tour.Guide.Surname,
             GuideAvatarUrl = t.Tour.Guide.Account.AvatarUrl,
             IsActive = t.Status == TourInstanceStatus.Scheduled,
-            Status = t.Status
+            Status = t.Status,
+            Classification = t.Tour.Classification
         }).ToList();
 
         var absoluteData = await dbContext.Tours.GroupBy(x => 1).Select(x => new
@@ -200,6 +199,8 @@ public static class ToursController
     {
         var tour = await dbContext.TourInstances.Include(x => x.Rates).Where(t => t.Id == id).Select(tour => new TourDescDto
         {
+            Id = tour.Id,
+            TourId = tour.TourId,
             ImageUrl = tour.Tour.ImageUrl,
             Title = tour.Tour.Title,
             Description = tour.Tour.Description,
@@ -213,7 +214,9 @@ public static class ToursController
             CurrentParticipants = tour.CurrentParticipants,
             GuideName = tour.Tour.Guide.Name,
             GuideSurname = tour.Tour.Guide.Surname,
-            GuideAvatarUrl = tour.Tour.Guide.Account.AvatarUrl
+            GuideAvatarUrl = tour.Tour.Guide.Account.AvatarUrl,
+            Status = tour.Status,
+            Classification = tour.Tour.Classification
         }).FirstOrDefaultAsync(stoppingToken);
 
         if (tour == null)

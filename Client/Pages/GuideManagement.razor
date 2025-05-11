@@ -1,0 +1,305 @@
+@page "/guide-management"
+@using System.Net.Http.Headers
+@using System.Text.Json
+@using Client.Components
+@using Shared.Model
+@using Shared.Model.Dtos
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IConfiguration Configuration
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudPaper Class="pa-4">
+        <MudText Typo="Typo.h4" Class="mb-4">Guide Management</MudText>
+        
+        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" Class="mt-4">
+            <MudTabPanel Text="My Tours">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreateTourDialog" Class="mb-4">
+                    <MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" />Create New Tour
+                </MudButton>
+
+                <MudTable Items="@Tours" Dense="true" Hover="true" Bordered="true" Striped="true" Loading="@_loading"
+                         LoadingProgressColor="Color.Info" Filter="new Func<TourDto,bool>(FilterFunc)">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<TourDto, object>(x=>x.Title)">Title</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<TourDto, object>(x=>x.Price)">Price</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<TourDto, object>(x=>x.DurationDays)">Duration</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<TourDto, object>(x=>x.TourType)">Type</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<TourDto, object>(x=>x.Classification)">Classification</MudTableSortLabel></MudTh>
+                        <MudTh>Locations</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Title">@context.Title</MudTd>
+                        <MudTd DataLabel="Price">$@context.Price</MudTd>
+                        <MudTd DataLabel="Duration">@context.DurationDays days</MudTd>
+                        <MudTd DataLabel="Type">@context.TourType</MudTd>
+                        <MudTd DataLabel="Classification">@context.Classification</MudTd>
+                        <MudTd DataLabel="Locations">
+                            @string.Join(", ", context.Locations.Select(l => globals.LocaleLocalizations[l].City))
+                        </MudTd>
+                        <MudTd>
+                            <MudStack Row="true" Spacing="2">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OpenEditTourDialog(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteTour(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="@(() => OpenCreateInstanceDialog(context))" />
+                            </MudStack>
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager />
+                    </PagerContent>
+                </MudTable>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Tour Instances">
+                <MudTable Items="@TourInstances" Dense="true" Hover="true" Bordered="true" Striped="true" Loading="@_loading"
+                         LoadingProgressColor="Color.Info" Filter="new Func<TourDescDto,bool>(FilterInstanceFunc)">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<TourDescDto, object>(x=>x.Title)">Tour</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<TourDescDto, object>(x=>x.StartDate)">Start Date</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<TourDescDto, object>(x=>x.EndDate)">End Date</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<TourDescDto, object>(x=>x.CurrentParticipants)">Participants</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<TourDescDto, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Tour">@context.Title</MudTd>
+                        <MudTd DataLabel="Start Date">@context.StartDate.Value.ToShortDateString()</MudTd>
+                        <MudTd DataLabel="End Date">@context.EndDate.Value.ToShortDateString()</MudTd>
+                        <MudTd DataLabel="Participants">@context.CurrentParticipants/@context.MaxParticipants</MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small">
+                                @globals.Localizations[$"TourStatus_{context.Status}"]
+                            </MudChip>
+                        </MudTd>
+                        <MudTd>
+                            <MudStack Row="true" Spacing="2">
+                                @if (context.Status == TourInstanceStatus.Scheduled || context.Status == TourInstanceStatus.FullyBooked || context.Status == TourInstanceStatus.Cancelled)
+                                {
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OpenEditInstanceDialog(context))" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Cancel" OnClick="@(() => CancelInstance(context))" />
+                                }
+                            </MudStack>
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager />
+                    </PagerContent>
+                </MudTable>
+            </MudTabPanel>
+        </MudTabs>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private bool _loading = true;
+    private List<TourDto> Tours { get; set; } = new();
+    private List<TourDescDto> TourInstances { get; set; } = new();
+    private TourDto? _selectedTour;
+    private TourDescDto? _selectedInstance;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            _loading = true;
+            var serverUrl = Configuration.GetValue<string>("ServerUrl");
+            using (var cli = new HttpClient())
+            {
+                cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.Token);
+                var response = await cli.GetAsync($"{serverUrl}/Guide/GetTours");
+                var result = await response.Content.ReadAsStringAsync();
+                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                {
+                    Snackbar.Add($"{@globals.Localizations["Messages_FailedToGetData"]} - {result}", Severity.Error);
+                    return;
+                }
+                Tours = JsonSerializer.Deserialize<List<TourDto>>(result, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? new();
+            }
+            using (var cli = new HttpClient())
+            {
+                cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.Token);
+                var response = await cli.GetAsync($"{serverUrl}/Guide/GetTourInstances");
+                var result = await response.Content.ReadAsStringAsync();
+                if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                {
+                    Snackbar.Add($"{@globals.Localizations["Messages_FailedToGetData"]} - {result}", Severity.Error);
+                    return;
+                }
+                TourInstances = JsonSerializer.Deserialize<List<TourDescDto>>(result, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? new();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Error loading data", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private bool FilterFunc(TourDto tour)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        return tour.Title.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+            || tour.Locations.Any(l => globals.LocaleLocalizations[l].City.Contains(_searchString, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private bool FilterInstanceFunc(TourDescDto instance)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        return instance.Title.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string _searchString = "";
+
+    public static Color GetStatusColor(TourInstanceStatus status) => status switch
+    {
+        TourInstanceStatus.Scheduled => Color.Info,
+        TourInstanceStatus.FullyBooked => Color.Warning,
+        TourInstanceStatus.Cancelled => Color.Error,
+        TourInstanceStatus.Completed => Color.Success,
+        _ => Color.Default
+    };
+
+    private async Task OpenCreateTourDialog()
+    {
+        var parameters = new DialogParameters
+        {
+            ["Tour"] = new TourDto(),
+            ["IsNew"] = true
+        };
+
+        var dialog = await DialogService.ShowAsync<TourDialog>("Create New Tour", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task OpenEditTourDialog(TourDto tour)
+    {
+        var parameters = new DialogParameters
+        {
+            ["Tour"] = tour,
+            ["IsNew"] = false
+        };
+
+        var dialog = await DialogService.ShowAsync<TourDialog>("Edit Tour", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task OpenCreateInstanceDialog(TourDto tour)
+    {
+        var parameters = new DialogParameters
+        {
+            ["Tour"] = tour,
+            ["IsNew"] = true
+        };
+
+        var dialog = await DialogService.ShowAsync<TourInstanceDialog>("Create New Tour Instance", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task OpenEditInstanceDialog(TourDescDto instance)
+    {
+        var parameters = new DialogParameters
+        {
+            ["Instance"] = instance,
+            ["IsNew"] = false
+        };
+
+        var dialog = await DialogService.ShowAsync<TourInstanceDialog>("Edit Tour Instance", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task DeleteTour(TourDto tour)
+    {
+        var parameters = new DialogParameters
+        {
+            ["ContentText"] = $"Are you sure you want to delete the tour '{tour.Title}'?",
+            ["ButtonText"] = "Delete",
+            ["Color"] = Color.Error
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Tour", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                await Http.DeleteAsync($"api/tour/{tour.Id}");
+                await LoadData();
+                Snackbar.Add("Tour deleted successfully", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add("Error deleting tour", Severity.Error);
+            }
+        }
+    }
+
+    private async Task CancelInstance(TourDescDto instance)
+    {
+        var parameters = new DialogParameters
+        {
+            ["ContentText"] = $"Are you sure you want to cancel this tour instance?",
+            ["ButtonText"] = "Cancel Tour",
+            ["Color"] = Color.Warning
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Cancel Tour Instance", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                await Http.PutAsync($"api/tour-instance/{instance.Id}/cancel", null);
+                await LoadData();
+                Snackbar.Add("Tour instance cancelled successfully", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add("Error cancelling tour instance", Severity.Error);
+            }
+        }
+    }
+} 

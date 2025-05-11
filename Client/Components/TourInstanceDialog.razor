@@ -1,0 +1,92 @@
+@using Client.Pages
+@using Shared.Model
+@using Shared.Model.Dtos
+@inject HttpClient Http 
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@success">
+            @if (IsNew)
+            {
+                <MudSelect T="int" Label="Tour" @bind-Value="Instance.TourId" Required="true" RequiredError="Tour is required!">
+                    @foreach (var tour in Tours)
+                    {
+                        <MudSelectItem Value="@tour.Id">@tour.Title</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+
+            <MudDatePicker Label="Start Date" @bind-Date="Instance.StartDate" Required="true" RequiredError="Start date is required!" />
+            <MudDatePicker Label="End Date" @bind-Date="Instance.EndDate" Required="true" RequiredError="End date is required!" />
+
+            <MudNumericField T="int" Label="Max Participants" @bind-Value="Instance.MaxParticipants" Required="true" RequiredError="Max participants is required!"
+            Min="1" Max="100" Step="1" />
+
+            <MudNumericField T="decimal" Label="Price" @bind-Value="Instance.Price" Required="true" RequiredError="Price is required!"
+            Min="0" Max="100000" Step="100" Format="C2" />
+
+            <MudSwitch Disabled="Instance.StartDate < DateTime.UtcNow" ValueChanged=ChangeStatus T="bool" Label="Is Active" Color="Color.Primary" Value="Instance.Status != TourInstanceStatus.Cancelled" />
+            <MudStack Row=true>
+                <MudText>Status: </MudText>
+                <MudChip T="string" Color="@GuideManagement.GetStatusColor(Instance.Status)" Size="Size.Small">
+                    @globals.Localizations[$"TourStatus_{Instance.Status}"]
+                </MudChip>
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit" Disabled="@(!success)">Submit</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public TourDescDto Instance { get; set; } = new();
+    [Parameter] public bool IsNew { get; set; }
+
+    private MudForm form = null!;
+    private bool success;
+    private List<TourDto> Tours { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsNew)
+        {
+            Tours = await Http.GetFromJsonAsync<List<TourDto>>("api/tour/guide") ?? new();
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        try
+        {
+            if (IsNew)
+            {
+                await Http.PostAsJsonAsync("api/tour-instance", Instance);
+                Snackbar.Add("Tour instance created successfully", Severity.Success);
+            }
+            else
+            {
+                await Http.PutAsJsonAsync($"api/tour-instance/{Instance.Id}", Instance);
+                Snackbar.Add("Tour instance updated successfully", Severity.Success);
+            }
+            
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Error saving tour instance", Severity.Error);
+        }
+    }
+
+    private void ChangeStatus(bool val) => Instance.Status = Instance.Status switch
+    {
+        TourInstanceStatus.Scheduled => TourInstanceStatus.Cancelled,
+        TourInstanceStatus.FullyBooked => TourInstanceStatus.Cancelled,
+        _ => Instance.CurrentParticipants >= Instance.MaxParticipants ? TourInstanceStatus.FullyBooked : TourInstanceStatus.Scheduled
+    };
+} 

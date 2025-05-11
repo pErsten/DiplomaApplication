@@ -26,7 +26,8 @@
             </MudItem>
             <MudItem xs="12" md="6">
                 <MudText Typo="Typo.h4" Class="mb-2">@tour.Title</MudText>
-                <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                <MudStack Row=true AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                    <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tour_Guide"]:</b></MudText>
                     <MudAvatar Size="Size.Small">
                         <MudImage Src=@tour.GuideAvatarUrl></MudImage>
                     </MudAvatar>
@@ -34,11 +35,11 @@
                 </MudStack>
                 <MudText Typo="Typo.body1" Class="mb-2">@tour.Description</MudText>
                 <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tour_Locations"]:</b> @string.Join(", ", tour.Locations.Select(l => globals.LocaleLocalizations[l].City))</MudText>
-                <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tour_Dates"]:</b> @tour.StartDate.ToString("dd MMM yyyy") – @tour.EndDate.ToString("dd MMM yyyy")</MudText>
-                <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tour_Duration"]:</b> @((tour.EndDate - tour.StartDate).Days) @globals.Localizations["Tours_Filter_Days"]</MudText>
+                <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tour_Dates"]:</b> @tour.StartDate.Value.ToString("dd MMM yyyy") – @tour.EndDate.Value.ToString("dd MMM yyyy")</MudText>
+                <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tour_Duration"]:</b> @((tour.EndDate - tour.StartDate).Value.Days) @globals.Localizations["Tours_Filter_Days"]</MudText>
                 <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tours_Filter_TourType"]:</b> @globals.Localizations[$"TourType_{tour.TourType}"]</MudText>
                 <MudText Typo="Typo.body2" Class="mb-1"><b>@globals.Localizations["Tour_Price"]:</b> $@tour.Price</MudText>
-                <MudStack Direction="Row" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                <MudStack Row=true AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
                     <MudText Typo="Typo.body2">@globals.Localizations["Tour_Rating"]:</MudText>
                     <MudRating SelectedValue=@((int)tour.Rating) MaxValue="5" ReadOnly Size="Size.Small" />
                     <MudText Typo="Typo.caption">@tour.Rating.ToString("0.0")</MudText>

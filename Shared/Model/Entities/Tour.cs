@@ -15,8 +15,6 @@ public class Tour
     public decimal Price { get; set; }
     public TourTypeEnum TourType { get; set; }
     public bool WithGuide { get; set; }
-    public bool PrivateTour { get; set; }
-    public bool GroupTour { get; set; }
     public SpecialOfferEnum SpecialOffers { get; set; }
     public int DurationDays { get; set; }
     public TourClassificationEnum Classification { get; set; }

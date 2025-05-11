@@ -11,14 +11,6 @@ using Shared.Model.Dtos;
 namespace Dipchik.Services;
 
 
-public record class GeoNamesCityDto(
-    int GeoId,
-    string Name,
-    float Latitude,
-    float Longitude,
-    GeoFeatureCode CityCode,
-    string Country);
-
 public record class GeoNamesLocalizationsDto(
     int geonameid,
     LocalizationCode locale,
