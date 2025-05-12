@@ -1,8 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Common.Model.Entities;
 
-namespace Shared.Model;
+namespace Common.Model.Entities;
 
 public class TourBooking
 {

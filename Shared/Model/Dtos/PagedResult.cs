@@ -1,4 +1,4 @@
-namespace Shared.Model;
+namespace Common.Model.Dtos;
 
 public class PagedResult<T>
 {

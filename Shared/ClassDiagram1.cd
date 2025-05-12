@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Common.Model.Entities.Account">
+    <Position X="15.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACCAAAAAAAAAAAIAwIAAAAAAgBAAAAAAAAQAQAAIAA=</HashCode>
+      <FileName>Model\Entities\Account.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Common.Model.Entities.AppEvent">
+    <Position X="17.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAACAAAAAAAAAAAAAAIAAAAEAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Entities\AppEvent.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Common.Model.Entities.Guide">
+    <Position X="13" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAEkAAAAQABAAAAAAAAAAAAAEAAEA=</HashCode>
+      <FileName>Model\Entities\Guide.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Account" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Common.Model.Entities.Language">
+    <Position X="19.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAEIAAA=</HashCode>
+      <FileName>Model\Entities\Language.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Common.Model.Entities.Location">
+    <Position X="18.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAIAAAAAAAAAAAIAAAA=</HashCode>
+      <FileName>Model\Entities\Location.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Common.Model.Entities.Tour">
+    <Position X="10.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACQAAAIQQgAEIAECYABAAACAAAAAAAQAAAQAAAAAA=</HashCode>
+      <FileName>Model\Entities\Tour.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Guide" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Common.Model.Entities.TourInstance">
+    <Position X="8" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAiAAAAAAAgAAAAAAAAAAAkAAgAAAEAAAAEIEAACAA=</HashCode>
+      <FileName>Model\Entities\TourInstance.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Tour" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Common.Model.Entities.TourInstanceRate">
+    <Position X="7.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAgCAAAAAAIAAAAAAAAABAQAgAAAAAAIAAAAAAAAAAA=</HashCode>
+      <FileName>Model\Entities\TourInstanceRate.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="TourInstance" />
+      <Property Name="TouristAccount" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Common.Model.Entities.TourBooking">
+    <Position X="15" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAIBAAAAAgAABAQAAACAQAAAAAAAIAAAAEA=</HashCode>
+      <FileName>Model\Entities\TourBookings.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Account" />
+      <Property Name="TourInstance" />
+    </ShowAsAssociation>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
