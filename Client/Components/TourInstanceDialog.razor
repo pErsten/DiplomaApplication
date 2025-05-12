@@ -83,10 +83,5 @@
         }
     }
 
-    private void ChangeStatus(bool val) => Instance.Status = Instance.Status switch
-    {
-        TourInstanceStatus.Scheduled => TourInstanceStatus.Cancelled,
-        TourInstanceStatus.FullyBooked => TourInstanceStatus.Cancelled,
-        _ => Instance.CurrentParticipants >= Instance.MaxParticipants ? TourInstanceStatus.FullyBooked : TourInstanceStatus.Scheduled
-    };
+    private void ChangeStatus(bool val) => Instance.IsCancelled = !Instance.IsCancelled;
 } 

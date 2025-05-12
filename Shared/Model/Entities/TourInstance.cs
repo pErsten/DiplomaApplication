@@ -18,7 +18,24 @@ public class TourInstance
     public DateTime EndDate { get; set; }
 
     // Instance status
-    public TourInstanceStatus Status { get; set; }
+    public TourInstanceStatus GetStatus()
+    {
+        if (IsCancelled)
+            return TourInstanceStatus.Cancelled;
+        if (EndDate <= DateTime.UtcNow)
+            return TourInstanceStatus.Completed;
+        return TourInstanceStatus.Scheduled;
+    }
+    public static TourInstanceStatus GetStatus(bool isCancelled, DateTime endDate)
+    {
+        if (isCancelled)
+            return TourInstanceStatus.Cancelled;
+        if (endDate <= DateTime.UtcNow)
+            return TourInstanceStatus.Completed;
+        return TourInstanceStatus.Scheduled;
+    }
+
+    public bool IsCancelled { get; set; }
     public int MaxParticipants { get; set; }
 
     // Navigation property for rates

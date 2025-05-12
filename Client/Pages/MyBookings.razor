@@ -46,16 +46,31 @@
                     </MudChip>
                 </MudTd>
                 <MudTd DataLabel="@globals.Localizations["MyBookings_Actions"]">
-                    @if (!context.IsCancelled && context.StartDate > DateTime.UtcNow)
-                    {
-                        <MudButton Variant="Variant.Text" 
-                        Color="Color.Error" 
-                        Size="Size.Small"
-                        OnClick="@(() => CancelBooking(context))"
-                        Disabled="@(context.StartDate <= DateTime.UtcNow.AddDays(1))">
-                            @globals.Localizations["MyBookings_Cancel"]
-                        </MudButton>
-                    }
+                    <MudStack Row=true Spacing="2">
+                        @if (!context.IsCancelled && context.StartDate > DateTime.UtcNow)
+                        {
+                            <MudButton Variant="Variant.Text" 
+                                     Color="Color.Error" 
+                                     Size="Size.Small"
+                                     OnClick="@(() => CancelBooking(context))"
+                                     Disabled="@(context.StartDate <= DateTime.UtcNow.AddDays(1))">
+                                @globals.Localizations["MyBookings_Cancel"]
+                            </MudButton>
+                        }
+                        @if (context.EndDate < DateTime.UtcNow && !context.IsCancelled && !context.HasRated)
+                        {
+                            <MudButton Variant="Variant.Text" 
+                                     Color="Color.Primary" 
+                                     Size="Size.Small"
+                                     OnClick="@(() => RateTour(context))">
+                                @globals.Localizations["MyBookings_Rate"]
+                            </MudButton>
+                        }
+                        @if (context.HasRated)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Star" Color="Color.Warning" />
+                        }
+                    </MudStack>
                 </MudTd>
             </RowTemplate>
         </MudTable>
@@ -135,6 +150,22 @@
         }
     }
 
+    private async Task RateTour(BookingDto booking)
+    {
+        var parameters = new DialogParameters
+        {
+            ["TourInstanceId"] = booking.TourInstanceId
+        };
+
+        var dialog = await DialogService.ShowAsync<RateTourDialog>(globals.Localizations["MyBookings_RateTour"], parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadBookings();
+        }
+    }
+
     private Color GetStatusColor(BookingDto context)
     {
         if (context.IsCancelled)
@@ -146,6 +177,7 @@
 
         return Color.Success;
     }
+
     private string GetStatusText(BookingDto context)
     {
         if (context.IsCancelled)

@@ -1,4 +1,6 @@
-﻿namespace Shared.Model.Dtos;
+﻿using Common.Model.Entities;
+
+namespace Shared.Model.Dtos;
 
 public class TourDescDto
 {
@@ -18,7 +20,8 @@ public class TourDescDto
     public double Rating { get; set; }
     public int MaxParticipants { get; set; }
     public int CurrentParticipants { get; set; }
+    public bool IsCancelled { get; set; }
 
-    public TourInstanceStatus Status { get; set; }
+    public TourInstanceStatus Status => TourInstance.GetStatus(IsCancelled, EndDate ?? DateTime.MinValue);
     public TourClassificationEnum Classification { get; set; }
 }

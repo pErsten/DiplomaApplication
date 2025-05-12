@@ -1,3 +1,4 @@
+using Common.Model.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting.DbContexts;
@@ -22,6 +23,7 @@ public static class ToursController
         group.MapPost("/GetAll", GetAllTours);
         group.MapGet("/GetById/{id}", GetTourById);
         group.MapGet("/GetRecommendations", GetTourRecommendations);
+        group.MapPost("/RateTour", RateTour);
 
         return builder;
     }
@@ -44,7 +46,7 @@ public static class ToursController
         }
 
         var query = dbContext.TourInstances
-            .Where(x => x.Status == TourInstanceStatus.Scheduled)
+            .Where(x => !x.IsCancelled && x.StartDate > DateTime.UtcNow)
             .Include(x => x.Tour)
             .ThenInclude(x => x.Guide)
             .ThenInclude(x => x.Account)
@@ -217,7 +219,7 @@ public static class ToursController
             GuideName = tour.Tour.Guide.Name,
             GuideSurname = tour.Tour.Guide.Surname,
             GuideAvatarUrl = tour.Tour.Guide.Account.AvatarUrl,
-            Status = tour.Status,
+            IsCancelled = tour.IsCancelled,
             Classification = tour.Tour.Classification
         }).FirstOrDefaultAsync(stoppingToken);
 
@@ -267,7 +269,7 @@ public static class ToursController
 
         // Get popular tours based on ratings
         var popularTours = await dbContext.TourInstances
-            .Where(x => x.Status == TourInstanceStatus.Scheduled)
+            .Where(x => !x.IsCancelled && x.StartDate > DateTime.UtcNow)
             .Include(x => x.Tour)
             .Include(x => x.Rates)
             .OrderByDescending(x => x.Rates.Average(r => r.Rate))
@@ -349,7 +351,7 @@ public static class ToursController
 
         // Get recommended tours
         var recommendedTours = await dbContext.TourInstances
-            .Where(x => recommendation.RecommendedTourIds.Contains(x.TourId) && x.Status == TourInstanceStatus.Scheduled)
+            .Where(x => recommendation.RecommendedTourIds.Contains(x.TourId) && !x.IsCancelled && x.StartDate > DateTime.UtcNow)
             .Include(x => x.Tour)
             .ThenInclude(x => x.Guide)
             .ThenInclude(x => x.Account)
@@ -383,6 +385,74 @@ public static class ToursController
             RecommendedTours = recommendedTours,
             RecommendationReason = recommendation.Reason
         });
+    }
+
+    public static async Task<IResult> RateTour(
+        HttpContext context,
+        SqlContext dbContext,
+        [FromBody] TourRateDto request,
+        CancellationToken stoppingToken)
+    {
+        var accountId = context.UserId();
+        if (accountId == null)
+        {
+            return Results.Unauthorized();
+        }
+
+        var account = await dbContext.Accounts.FirstOrDefaultAsync(x => x.AccountId == accountId, stoppingToken);
+        if (account is null)
+        {
+            return Results.BadRequest("Account not found");
+        }
+
+        // Verify the tour instance exists and has ended
+        var tourInstance = await dbContext.TourInstances
+            .Include(x => x.Rates)
+            .FirstOrDefaultAsync(x => x.Id == request.TourInstanceId, stoppingToken);
+
+        if (tourInstance == null)
+        {
+            return Results.NotFound("Tour instance not found");
+        }
+
+        if (tourInstance.GetStatus() != TourInstanceStatus.Completed)
+        {
+            return Results.BadRequest("Can only rate completed tours");
+        }
+
+        // Check if user has already rated this tour
+        var existingRate = tourInstance.Rates.FirstOrDefault(x => x.TouristAccountId == account.Id);
+        if (existingRate != null)
+        {
+            return Results.BadRequest("You have already rated this tour");
+        }
+
+        // Verify user was a participant
+        var booking = await dbContext.TourBookings
+            .FirstOrDefaultAsync(x => x.TourInstanceId == request.TourInstanceId && 
+                                    x.AccountId == account.Id && 
+                                    x.CancellationDate == null, 
+                                stoppingToken);
+
+        if (booking == null)
+        {
+            return Results.BadRequest("You must have participated in the tour to rate it");
+        }
+
+        // Create the rating
+        var rate = new TourInstanceRate
+        {
+            TourInstanceId = request.TourInstanceId,
+            TouristAccountId = account.Id,
+            Rate = request.Rate,
+            TouristCommentary = request.Commentary,
+            RatedTimeUtc = DateTime.UtcNow
+        };
+
+        await dbContext.TourInstanceRates.AddAsync(rate, stoppingToken);
+        await dbContext.SaveChangesAsync(stoppingToken);
+
+        return Results.Ok();
     }
 
     private class ChatGptResponse

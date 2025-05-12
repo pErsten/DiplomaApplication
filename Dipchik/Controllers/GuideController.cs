@@ -108,7 +108,7 @@ public static class GuideController
             GuideName = tour.Tour.Guide.Name,
             GuideSurname = tour.Tour.Guide.Surname,
             GuideAvatarUrl = tour.Tour.Guide.Account.AvatarUrl,
-            Status = tour.Status,
+            IsCancelled = tour.IsCancelled,
             Classification = tour.Tour.Classification
         }).ToListAsync(stoppingToken);
 

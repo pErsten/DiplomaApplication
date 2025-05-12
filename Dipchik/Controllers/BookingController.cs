@@ -1,3 +1,4 @@
+using Common.Model.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting.DbContexts;
 using Shared.Model;
@@ -33,13 +34,13 @@ public static class BookingController
 
         var tour = await dbContext.TourInstances
             .Where(x => x.Id == id)
-            .Select(x => new { x.Status, x.MaxParticipants, x.Tour.Price })
+            .Select(x => new { x.IsCancelled, x.MaxParticipants, x.Tour.Price, x.EndDate })
             .FirstOrDefaultAsync(stoppingToken);
         if (tour is null)
         {
             return Results.BadRequest("Tour not found");
         }
-        if (tour.Status != TourInstanceStatus.Scheduled)
+        if (TourInstance.GetStatus(tour.IsCancelled, tour.EndDate) != TourInstanceStatus.Scheduled)
         {
             return Results.BadRequest("Tour is not available for booking");
         }
@@ -95,6 +96,8 @@ public static class BookingController
             .Where(x => x.AccountId == account.Id)
             .Include(x => x.TourInstance)
             .ThenInclude(x => x.Tour)
+            .Include(x => x.TourInstance)
+            .ThenInclude(x => x.Rates)
             .OrderByDescending(x => x.BookedUtc)
             .Select(x => new BookingDto
             {
@@ -104,7 +107,8 @@ public static class BookingController
                 StartDate = x.TourInstance.StartDate,
                 EndDate = x.TourInstance.EndDate,
                 TotalPrice = x.TotalPrice,
-                IsCancelled = x.IsCancelled
+                IsCancelled = x.IsCancelled,
+                HasRated = x.TourInstance.Rates.Any(r => r.TouristAccountId == account.Id)
             })
             .ToListAsync(stoppingToken);
 

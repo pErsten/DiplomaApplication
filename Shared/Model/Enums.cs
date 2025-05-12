@@ -64,8 +64,7 @@ public enum TourInstanceStatus
     None = 0,
     Scheduled = 1,
     Completed = 2,
-    Cancelled = 3,
-    FullyBooked = 4
+    Cancelled = 3
 }
 public enum TourClassificationEnum
 {

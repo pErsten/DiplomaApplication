@@ -86,7 +86,7 @@ public class SqlContext : DbContext
                         {
                             StartDate = DateTime.UtcNow.AddDays(10),
                             EndDate = DateTime.UtcNow.AddDays(17),
-                            Status = TourInstanceStatus.Scheduled,
+                            IsCancelled = false,
                             MaxParticipants = 20
                         }
                     }
@@ -112,7 +112,7 @@ public class SqlContext : DbContext
                         {
                             StartDate = DateTime.UtcNow.AddDays(20),
                             EndDate = DateTime.UtcNow.AddDays(30),
-                            Status = TourInstanceStatus.Scheduled,
+                            IsCancelled = false,
                             MaxParticipants = 15
                         }
                     }
@@ -138,7 +138,7 @@ public class SqlContext : DbContext
                         {
                             StartDate = DateTime.UtcNow.AddDays(40),
                             EndDate = DateTime.UtcNow.AddDays(48),
-                            Status = TourInstanceStatus.Scheduled,
+                            IsCancelled = false,
                             MaxParticipants = 30
                         }
                     }
@@ -164,7 +164,7 @@ public class SqlContext : DbContext
                         {
                             StartDate = DateTime.UtcNow.AddDays(5),
                             EndDate = DateTime.UtcNow.AddDays(10),
-                            Status = TourInstanceStatus.Scheduled,
+                            IsCancelled = false,
                             MaxParticipants = 25
                         }
                     }

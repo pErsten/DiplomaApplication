@@ -9,4 +9,5 @@ public class BookingDto
     public DateTime EndDate { get; set; }
     public decimal TotalPrice { get; set; }
     public bool IsCancelled { get; set; }
+    public bool HasRated { get; set; }
 } 
