@@ -3,8 +3,8 @@
 public class OperationResult<T>
 {
     private T Data { get; set; }
-    public string ErrorMessageCode { get; set; } = string.Empty;
-    public bool IsSuccess => !string.IsNullOrEmpty(ErrorMessageCode);
+    public string? ErrorMessageCode { get; set; } = null!;
+    public bool IsSuccess => string.IsNullOrEmpty(ErrorMessageCode);
 
     public OperationResult(string errorMessageCode)
     {
@@ -31,8 +31,8 @@ public class OperationResult<T>
 
 public class OperationResult
 {
-    public string ErrorMessageCode { get; set; } = string.Empty;
-    public bool IsSuccess => !string.IsNullOrEmpty(ErrorMessageCode);
+    public string ErrorMessageCode { get; set; } = null!;
+    public bool IsSuccess => string.IsNullOrEmpty(ErrorMessageCode);
     public OperationResult(string errorMessageCode)
     {
         ErrorMessageCode = errorMessageCode;

@@ -12,7 +12,7 @@ public class SqlContext : DbContext
         : base(options)
     {
         Database.EnsureCreated();
-        SeedTours();
+        //SeedTours();
     }
 
     public DbSet<Account> Accounts { get; set; }
