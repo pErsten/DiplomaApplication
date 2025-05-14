@@ -1,9 +1,9 @@
 ﻿using System.Security.Cryptography;
-using System.Security.Principal;
 using System.Text;
 using Common.Model.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting.DbContexts;
+using Shared.Model;
 
 namespace Dipchik.Services;
 
@@ -11,49 +11,74 @@ public class AuthService
 {
     private ILogger<AuthService> logger;
     private readonly SqlContext dbContext;
+    private readonly HttpContext httpContext;
 
-    public AuthService(ILoggerFactory loggerFactory, SqlContext dbContext)
+    public AuthService(ILoggerFactory loggerFactory, SqlContext dbContext, HttpContext httpContext)
     {
         logger = loggerFactory.CreateLogger<AuthService>();
         this.dbContext = dbContext;
+        this.httpContext = httpContext;
     }
 
-    private async Task<Account?> GetExistingUser(string login)
+    private async Task<OperationResult<Account>> GetExistingUser(string login)
     {
-        return await dbContext.Accounts.FirstOrDefaultAsync(x => x.Login == login);
+        var account = await dbContext.Accounts.FirstOrDefaultAsync(x => x.Login == login);
+        if (account is null)
+        {
+            logger.LogWarning("User doesn't exist, login: {login}", login);
+            return new OperationResult<Account>(ErrorCodes.ErrorCode_AccountNotFound);
+        }
+
+        return new OperationResult<Account>(account);
     }
 
-    public async Task<Account> AddNewUser(string login, string passwordHash)
+    public async Task<OperationResult<Account>> AddNewUser(string login, string passwordHash)
     {
-        var account = await GetExistingUser(login);
-        if (account is not null)
+        var result = await GetExistingUser(login);
+        if (result.TryGetValue(out var account))
         {
             logger.LogWarning("Tried to register already existing user: {userGuid}", account.AccountId);
-            return account.PasswordHash != passwordHash! ? null! : account;
+            return account.PasswordHash != passwordHash! ? new OperationResult<Account>(ErrorCodes.ErrorCode_TriedToRegisterExistingAccount) : result;
         }
 
         account = new Account(passwordHash, login);
         await dbContext.Accounts.AddAsync(account);
         await dbContext.SaveChangesAsync();
-        return account;
+        return new OperationResult<Account>(account);
     }
 
-    public async Task<Account?> ValidateUser(string login, string passwordHash)
+    public async Task<OperationResult<Account>> ValidateUser(string login, string passwordHash)
     {
-        var account = await GetExistingUser(login);
-        if (account is null)
+        var result = await GetExistingUser(login);
+        if (!result.TryGetValue(out var account))
         {
-            logger.LogWarning("User doesn't exist, login: {login}", login);
-            return null;
+            return result;
         }
 
         if (passwordHash != account.PasswordHash)
         {
             logger.LogInformation("Wrong password, login: {login}", login);
-            return null;
+            return new OperationResult<Account>(ErrorCodes.ErrorCode_AccountWrongPassword);
         }
 
-        return account;
+        return result;
+    }
+
+    public async Task<OperationResult<Account>> GetAccount(CancellationToken stoppingToken)
+    {
+        var accountId = httpContext.UserId();
+        if (accountId == null)
+        {
+            return new OperationResult<Account>(ErrorCodes.ErrorCode_AccountNotFound);
+        }
+
+        var account = await dbContext.Accounts.FirstOrDefaultAsync(x => x.AccountId == accountId, stoppingToken);
+        if (account is null)
+        {
+            return new OperationResult<Account>(ErrorCodes.ErrorCode_AccountNotFound);
+        }
+
+        return new OperationResult<Account>(account);
     }
 
     public static string PasswordHasher(string password)

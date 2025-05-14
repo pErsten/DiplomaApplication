@@ -1,10 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.Extensions.Caching.Memory;
-using Shared.Model.Dtos;
+﻿using Shared.Model.Dtos;
 using Shared.Model;
-using System;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting.DbContexts;
 using StackExchange.Redis;
@@ -17,10 +13,12 @@ public class CacheManager
     private readonly IConfiguration configuration;
     private readonly IConnectionMultiplexer connectionMultiplexer;
     private readonly IServiceScopeFactory scopeFactory;
+    private ILogger<CacheManager> logger;
     private readonly int localizationsDbInt;
 
-    public CacheManager(IConfiguration configuration, IConnectionMultiplexer connectionMultiplexer, IServiceScopeFactory scopeFactory)
+    public CacheManager(ILoggerFactory loggerFactory, IConfiguration configuration, IConnectionMultiplexer connectionMultiplexer, IServiceScopeFactory scopeFactory)
     {
+        logger = loggerFactory.CreateLogger<CacheManager>();
         localizationsDbInt = configuration.GetValue<int>("Redis:LocalizationsDbInt");
 
         redisDB = connectionMultiplexer.GetDatabase(localizationsDbInt);
@@ -40,6 +38,7 @@ public class CacheManager
         foreach (var key in keys)
         {
             await redisDB.KeyDeleteAsync(key);
+            logger.LogInformation("Clearing Location Localization for {lang} language", key.ToString());
         }
     }
     public async Task ClearDisplayLocalizationsCache()
@@ -53,6 +52,7 @@ public class CacheManager
         foreach (var key in keys)
         {
             await redisDB.KeyDeleteAsync(key);
+            logger.LogInformation("Clearing Display Localization for {lang} language", key.ToString());
         }
     }
 
@@ -72,6 +72,7 @@ public class CacheManager
         var list = JsonSerializer.Deserialize<List<LanguageLocationsDto>>(data);
         await redisDB.HashSetAsync($"{Constants.LOCATION_LOCALIZATION_CACHE_KEY}_{code.ToString()}",
             list.Select(x => new HashEntry(x.GeoId.ToString(), JsonSerializer.Serialize(x))).ToArray());
+        logger.LogInformation("Setting Location Localization for {lang} language", code.ToString());
 
         return list.ToDictionary(x => x.GeoId);
     }
@@ -91,6 +92,7 @@ public class CacheManager
         var list = JsonSerializer.Deserialize<Dictionary<string, string>>(data);
         await redisDB.HashSetAsync($"{Constants.DISPLAY_LOCALIZATION_CACHE_KEY}_{code.ToString()}",
             list.Select(x => new HashEntry(x.Key, x.Value)).ToArray());
+        logger.LogInformation("Setting Display Localization for {lang} language", code.ToString());
 
         return list.ToDictionary(x => x.Key, x => x.Value);
     }

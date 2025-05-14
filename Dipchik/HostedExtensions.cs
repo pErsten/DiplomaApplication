@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using System.Text;
 using System.Threading.Channels;
+using Backend.Services;
 using CloudinaryDotNet;
 using Dipchik.BackgroundWorkers;
 using Dipchik.Services;
@@ -41,6 +42,9 @@ namespace Dipchik
             services.AddDbContext<SqlContext>(options => options.UseNpgsql(sqlConnectionStr));
             services.AddScoped<AuthService>();
             services.AddScoped<LocalizationsService>();
+            services.AddScoped<BookingService>();
+            services.AddScoped<GuideService>();
+            services.AddScoped<ToursService>();
             services.AddSingleton<Cloudinary>(x =>
             {
                 var elem = new Cloudinary(cloudinaryConnectionStr);

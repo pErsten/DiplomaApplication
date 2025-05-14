@@ -23,11 +23,11 @@ public static class LocalizationController
     {
         if (!Enum.TryParse<LocalizationCode>(localeCode, out var localization))
         {
-            return Results.BadRequest("Bad localization code provided");
+            return Results.BadRequest(ErrorCodes.ErrorCode_LocaleNotFound);
         }
         if (localization == LocalizationCode.None)
         {
-            return Results.BadRequest("Localization can't be None");
+            return Results.BadRequest(ErrorCodes.ErrorCode_LocaleNotSupported);
         }
 
         var res = await cache.GetDisplayLocalizations(localization, stoppingToken);
@@ -38,11 +38,11 @@ public static class LocalizationController
     {
         if (!Enum.TryParse<LocalizationCode>(localeCode, out var localization))
         {
-            return Results.BadRequest("Bad localization code provided");
+            return Results.BadRequest(ErrorCodes.ErrorCode_LocaleNotFound);
         }
         if (localization == LocalizationCode.None)
         {
-            return Results.BadRequest("Localization can't be None");
+            return Results.BadRequest(ErrorCodes.ErrorCode_LocaleNotSupported);
         }
 
         var res = await cache.GetLocationLocalizations(localization, stoppingToken);

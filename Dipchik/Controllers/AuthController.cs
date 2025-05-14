@@ -20,20 +20,20 @@ public static class AuthController
     }
     public static async Task<IResult> Register(string login, string password, AuthService authService, JwtTokenGenerator tokenGenerator)
     {
-        var account = await authService.AddNewUser(login, AuthService.PasswordHasher(password));
-        if (account is null)
+        var result = await authService.AddNewUser(login, AuthService.PasswordHasher(password));
+        if (!result.TryGetValue(out var account))
         {
-            return Results.BadRequest("Couldn't create new user");
+            return Results.BadRequest(result.ErrorMessageCode);
         }
 
         return Results.Ok(tokenGenerator.GenerateJwt(account));
     }
     public static async Task<IResult> Login(string login, string password, AuthService authService, JwtTokenGenerator tokenGenerator)
     {
-        var account = await authService.ValidateUser(login, AuthService.PasswordHasher(password));
-        if (account is null)
+        var result = await authService.ValidateUser(login, AuthService.PasswordHasher(password));
+        if (!result.TryGetValue(out var account))
         {
-            return Results.BadRequest("Couldn't login user");
+            return Results.BadRequest(result.ErrorMessageCode);
         }
 
         return Results.Ok(tokenGenerator.GenerateJwt(account));
