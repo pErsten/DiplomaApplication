@@ -25,20 +25,20 @@
             <MudPaper Class="d-flex align-center gap-2 p-3 rounded" Style="position: relative; overflow: visible;">
                 <!-- Destination Search -->
                 <MudAutocomplete T="int" 
-                               Placeholder="@globals.Localizations["Tours_Filter_SearchDestinations"]" 
-                               SearchFunc="SearchDestinations" 
-                               Style="width: 200px;"
-                               @bind-Value="SelectedDestination"
-                               ToStringFunc="@(id => globals.LocaleLocalizations[id].City)" />
+                Placeholder="@globals.Localizations["Tours_Filter_SearchDestinations"]" 
+                SearchFunc="SearchDestinations" 
+                Style="width: 200px;"
+                @bind-Value="SelectedDestination"
+                ToStringFunc="@(id => globals.LocaleLocalizations[id].City)" />
 
                 <!-- Date Picker -->
                 <MudDatePicker @bind-Date="Filters.StartDate" Placeholder="@globals.Localizations["Tours_Filter_StartDate"]" />
 
                 <!-- Fake Dropdown Toggle -->
                 <MudButton Variant="Variant.Outlined" 
-                          OnClick="@ToggleFilter" 
-                          EndIcon=@(ShowFilter ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)
-                          Disabled="@IsLoading">
+                OnClick="@ToggleFilter" 
+                EndIcon=@(ShowFilter ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)
+                Disabled="@IsLoading">
                     @if (ShowFilter)
                     {
                         <div>@globals.Localizations["Tours_Filter_HideFilters"]</div>
@@ -68,13 +68,13 @@
                                 <MudStack>
                                     <MudText Typo="Typo.subtitle2">@globals.Localizations["Tours_Filter_Duration"]</MudText>
                                     <MudRangeSlider Min="@MinPossibleDuration" 
-                                                  Max="@MaxPossibleDuration" 
-                                                  Step="1" 
-                                                  @bind-Value="Filters.FromDurationDays"
-                                                  @bind-UpperValue="Filters.ToDurationDays"
-                                                  Range="true"
-                                                  Immediate="true"
-                                                  MinDistance="1" />
+                                    Max="@MaxPossibleDuration" 
+                                    Step="1" 
+                                    @bind-Value="Filters.FromDurationDays"
+                                    @bind-UpperValue="Filters.ToDurationDays"
+                                    Range="true"
+                                    Immediate="true"
+                                    MinDistance="1" />
                                     <MudText Typo="Typo.caption">@Filters.FromDurationDays – @Filters.ToDurationDays @globals.Localizations["Tours_Filter_Days"]</MudText>
                                 </MudStack>
 
@@ -82,30 +82,30 @@
                                 <MudStack>
                                     <MudText Typo="Typo.subtitle2">@globals.Localizations["Tours_Filter_Price"]</MudText>
                                     <MudRangeSlider Min="@MinPossiblePrice" 
-                                                  Max="@MaxPossiblePrice" 
-                                                  Step="50"
-                                                  @bind-Value="Filters.FromPrice" 
-                                                  @bind-UpperValue="Filters.ToPrice" 
-                                                  Range="true"
-                                                  Immediate="true"
-                                                  MinDistance="50" />
+                                    Max="@MaxPossiblePrice" 
+                                    Step="50"
+                                    @bind-Value="Filters.FromPrice" 
+                                    @bind-UpperValue="Filters.ToPrice" 
+                                    Range="true"
+                                    Immediate="true"
+                                    MinDistance="50" />
                                     <MudText Typo="Typo.caption">$@Filters.FromPrice – $@Filters.ToPrice</MudText>
                                 </MudStack>
 
                                 <!-- Number of Destinations -->
                                 <MudText Typo="Typo.subtitle2">@globals.Localizations["Tours_Filter_NumberOfDestinations"]</MudText>
-                                <MudRadioGroup T="DestinationCountEnum" @bind-SelectedOption="Filters.DestinationsCount">
-                                    <MudRadio T="DestinationCountEnum" Option="DestinationCountEnum.Single">@globals.Localizations["Tours_Filter_SingleLocation"]</MudRadio>
-                                    <MudRadio T="DestinationCountEnum" Option="DestinationCountEnum.TwoToThree">@globals.Localizations["Tours_Filter_2_3Locations"]</MudRadio>
-                                    <MudRadio T="DestinationCountEnum" Option="DestinationCountEnum.FourPlus">@globals.Localizations["Tours_Filter_4PlusLocations"]</MudRadio>
+                                <MudRadioGroup T="DestinationCountEnum?" @bind-SelectedOption="Filters.DestinationsCount">
+                                    <MudRadio T="DestinationCountEnum?" Option="DestinationCountEnum.Single">@globals.Localizations["Tours_Filter_SingleLocation"]</MudRadio>
+                                    <MudRadio T="DestinationCountEnum?" Option="DestinationCountEnum.TwoToThree">@globals.Localizations["Tours_Filter_2_3Locations"]</MudRadio>
+                                    <MudRadio T="DestinationCountEnum?" Option="DestinationCountEnum.FourPlus">@globals.Localizations["Tours_Filter_4PlusLocations"]</MudRadio>
                                 </MudRadioGroup>
 
                                 <!-- Tour Type -->
                                 <MudText Typo="Typo.subtitle2">@globals.Localizations["Tours_Filter_TourType"]</MudText>
                                 <MudSelect MultiSelectionTextFunc="MultiSelectionTextFunc" 
-                                         T="TourTypeEnum" 
-                                         MultiSelection="true" 
-                                         @bind-SelectedValues="Filters.TourTypes">
+                                T="TourTypeEnum" 
+                                MultiSelection="true" 
+                                @bind-SelectedValues="Filters.TourTypes">
                                     @foreach (TourTypeEnum type in Enum.GetValues(typeof(TourTypeEnum)))
                                     {
                                         @if (type != TourTypeEnum.None)
@@ -114,16 +114,6 @@
                                         }
                                     }
                                 </MudSelect>
-
-                                <!-- Rating -->
-                                <MudStack>
-                                    <MudText Typo="Typo.subtitle2">@globals.Localizations["Tours_Filter_Rating"]</MudText>
-                                    <MudSlider Min="1.0" 
-                                             Max="5.0" 
-                                             Step="0.1" 
-                                             @bind-Value="Filters.MinRating"/>
-                                    <MudText Typo="Typo.caption">@Filters.MinRating.ToString("0.0") @globals.Localizations["Tours_Filter_Stars"]</MudText>
-                                </MudStack>
 
                                 <!-- Format Options -->
                                 <MudText Typo="Typo.subtitle2">@globals.Localizations["Tours_Filter_TourFormat"]</MudText>
@@ -136,6 +126,26 @@
                                 <MudCheckBox T=bool @bind-Checked="Filters.OnSale" Label="@globals.Localizations["Tours_Filter_OnSale"]" />
                                 <MudCheckBox T=bool @bind-Checked="Filters.StartsSoon" Label="@globals.Localizations["Tours_Filter_StartsSoon"]" />
                                 <MudCheckBox T=bool @bind-Checked="Filters.SpecialDiscount" Label="@globals.Localizations["Tours_Filter_SpecialDiscount"]" />
+                            </MudStack>
+
+                            <MudDivider Class="my-3" />
+
+                            <MudStack Row=true Justify="Justify.FlexEnd" Spacing="2">
+                                <MudButton Variant="Variant.Outlined" 
+                                OnClick="ClearAll" 
+                                Disabled="@IsLoading">
+                                    @globals.Localizations["Tours_Filter_ClearAll"]
+                                </MudButton>
+                                <MudButton Variant="Variant.Filled" 
+                                Color="Color.Primary" 
+                                OnClick="LoadData" 
+                                Disabled="@IsLoading">
+                                    @if (IsLoading)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                    }
+                                    @globals.Localizations["Tours_Filter_Apply"]
+                                </MudButton>
                             </MudStack>
                         }
                     </MudPaper>
@@ -204,11 +214,11 @@
                     }
                 </MudGrid>
                 <MudTablePager PageSizeOptions="new int[] {6, 12, 24}" 
-                             PageSize="@PageSize" 
-                             PageIndex="@PageIndex" 
-                             RowsPerPageString="" 
-                             OnPageChanged="OnPageChanged" 
-                             RowsCount="@TotalCount" />
+                PageSize="@PageSize" 
+                PageIndex="@PageIndex" 
+                RowsPerPageString="" 
+                OnPageChanged="OnPageChanged" 
+                RowsCount="@TotalCount" />
             }
         </MudItem>
     </MudGrid>
@@ -218,15 +228,7 @@
     // Filter state
     private bool ShowFilter;
     private int SelectedDestination;
-    private TourFiltersDto Filters = new TourFiltersDto
-    {
-        TourTypes = new List<TourTypeEnum>(),
-        FromDurationDays = 1,
-        ToDurationDays = int.MaxValue,
-        FromPrice = 0M,
-        ToPrice = decimal.MaxValue,
-        MinRating = 1.0d
-    };
+    private TourFiltersDto Filters = null;
     private bool IsLoading = true;
 
     // Range values
@@ -239,7 +241,7 @@
     private List<TourDto> AllTours = new();
     private int TotalCount;
     private int PageIndex = 0;
-    private int PageSize = 6;
+    private int PageSize = 20;
     private string SortBy = "price";
 
     private List<TourDto> RecommendedTours = new();
@@ -260,6 +262,19 @@
             using var cli = new HttpClient();
 
             // Fetch filtered tours
+            bool isFirstLoad = Filters is null;
+            if (isFirstLoad)
+            {
+                Filters = new TourFiltersDto
+                {
+                    TourTypes = new List<TourTypeEnum>(),
+                    FromDurationDays = 1,
+                    ToDurationDays = int.MaxValue,
+                    FromPrice = 0M,
+                    ToPrice = decimal.MaxValue,
+                    DestinationsCount = null
+                };
+            }
             var response = await cli.PostAsJsonAsync($"{serverUrl}/Tours/GetAll?page={PageIndex + 1}&pageSize={PageSize}", Filters);
             var result = await response.Content.ReadAsStringAsync();
             
@@ -281,12 +296,15 @@
             MaxPossibleDuration = toursResponse.MaxDuration;
             MinPossiblePrice = toursResponse.MinPrice;
             MaxPossiblePrice = toursResponse.MaxPrice;
-            Filters.FromDurationDays = MinPossibleDuration;
-            Filters.ToDurationDays = MaxPossibleDuration;
-            Filters.FromPrice = MinPossiblePrice;
-            Filters.ToPrice = MaxPossiblePrice;
-            Filters.SortBy = SortBy;
-            Filters.SelectedDestination = SelectedDestination;
+            if (isFirstLoad)
+            {
+                Filters.FromDurationDays = MinPossibleDuration;
+                Filters.ToDurationDays = MaxPossibleDuration;
+                Filters.FromPrice = MinPossiblePrice;
+                Filters.ToPrice = MaxPossiblePrice;
+                Filters.SortBy = SortBy;
+                Filters.SelectedDestination = SelectedDestination;
+            }
         }
         catch (Exception ex)
         {
@@ -345,7 +363,7 @@
 
     private void ToggleFilter() => ShowFilter = !ShowFilter;
 
-    private void ClearAll()
+    private async Task ClearAll()
     {
         SelectedDestination = 0;
         Filters = new TourFiltersDto
@@ -355,9 +373,9 @@
             ToDurationDays = int.MaxValue,
             FromPrice = 0M,
             ToPrice = decimal.MaxValue,
-            MinRating = 1.0d
-        };
-        ApplyFilters();
+            DestinationsCount = null
+            };
+        await LoadData();
     }
 
     private async Task<IEnumerable<int>> SearchDestinations(string value, CancellationToken stoppingToken)
@@ -368,23 +386,17 @@
             .Where(x => x.Value.City.Contains(value, StringComparison.InvariantCultureIgnoreCase))
             .Select(x => x.Key);
     }
-
-    private void ApplyFilters()
-    {
-        PageIndex = 0;
-        _ = LoadData();
-    }
-
-    private void OnPageChanged(int page)
+    
+    private async Task OnPageChanged(int page)
     {
         PageIndex = page;
-        _ = LoadData();
+        await LoadData();
     }
 
-    private void OnSortChanged(string value)
+    private async Task OnSortChanged(string value)
     {
         SortBy = value;
-        ApplyFilters();
+        await LoadData();
     }
 
     // Helper for displaying a tour instance card

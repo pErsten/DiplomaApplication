@@ -12,7 +12,7 @@ public class SqlContext : DbContext
         : base(options)
     {
         Database.EnsureCreated();
-        //SeedTours();
+        SeedTours();
     }
 
     public DbSet<Account> Accounts { get; set; }
@@ -168,6 +168,162 @@ public class SqlContext : DbContext
                             MaxParticipants = 25
                         }
                     }
+                },
+                new Tour
+                {
+                    Title = "Carpathian Mountains Adventure",
+                    Description = "Experience the beauty of Ukrainian Carpathians. Hike through pristine forests, visit traditional Hutsul villages, and enjoy local cuisine. Perfect for nature lovers and adventure seekers.",
+                    Price = 1200,
+                    DurationDays = 5,
+                    WithGuide = true,
+                    Classification = TourClassificationEnum.Group,
+                    TourType = TourTypeEnum.Hiking,
+                    ImageUrl = "https://images.unsplash.com/photo-1598887141928-7c4c472b8b8b",
+                    GuideId = guide.Id,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    Locations = new List<int> { 12, 13 }, // Lviv and Ivano-Frankivsk
+                    SpecialOffers = SpecialOfferEnum.None,
+                    Instances = new List<TourInstance>
+                    {
+                        new TourInstance
+                        {
+                            StartDate = DateTime.UtcNow.AddDays(15),
+                            EndDate = DateTime.UtcNow.AddDays(20),
+                            IsCancelled = false,
+                            MaxParticipants = 15
+                        }
+                    }
+                },
+                new Tour
+                {
+                    Title = "Kyiv Cultural Heritage Tour",
+                    Description = "Discover the rich history and culture of Ukraine's capital. Visit ancient cathedrals, explore the historic Podil district, and experience vibrant local life.",
+                    Price = 800,
+                    DurationDays = 4,
+                    WithGuide = true,
+                    Classification = TourClassificationEnum.Group,
+                    TourType = TourTypeEnum.Sightseeing,
+                    ImageUrl = "https://images.unsplash.com/photo-1598887141928-7c4c472b8b8b",
+                    GuideId = guide.Id,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    Locations = new List<int> { 14 }, // Kyiv
+                    SpecialOffers = SpecialOfferEnum.OnSale,
+                    Instances = new List<TourInstance>
+                    {
+                        new TourInstance
+                        {
+                            StartDate = DateTime.UtcNow.AddDays(25),
+                            EndDate = DateTime.UtcNow.AddDays(29),
+                            IsCancelled = false,
+                            MaxParticipants = 20
+                        }
+                    }
+                },
+                new Tour
+                {
+                    Title = "Odesa Black Sea Retreat",
+                    Description = "Enjoy the beautiful Black Sea coast in Odesa. Relax on sandy beaches, explore historic architecture, and experience the city's famous nightlife.",
+                    Price = 1500,
+                    DurationDays = 6,
+                    WithGuide = true,
+                    Classification = TourClassificationEnum.Group,
+                    TourType = TourTypeEnum.Recreational,
+                    ImageUrl = "https://images.unsplash.com/photo-1598887141928-7c4c472b8b8b",
+                    GuideId = guide.Id,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    Locations = new List<int> { 15 }, // Odesa
+                    SpecialOffers = SpecialOfferEnum.StartsSoon,
+                    Instances = new List<TourInstance>
+                    {
+                        new TourInstance
+                        {
+                            StartDate = DateTime.UtcNow.AddDays(35),
+                            EndDate = DateTime.UtcNow.AddDays(41),
+                            IsCancelled = false,
+                            MaxParticipants = 18
+                        }
+                    }
+                },
+                new Tour
+                {
+                    Title = "Carpathian Recovery Retreat",
+                    Description = "A specialized recovery program for Ukrainian soldiers in the peaceful Carpathian Mountains. Features therapeutic activities, psychological support, and nature-based healing.",
+                    Price = 2000,
+                    DurationDays = 10,
+                    WithGuide = true,
+                    Classification = TourClassificationEnum.Private,
+                    TourType = TourTypeEnum.Recovery,
+                    ImageUrl = "https://images.unsplash.com/photo-1598887141928-7c4c472b8b8b",
+                    GuideId = guide.Id,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    Locations = new List<int> { 12, 13 }, // Lviv and Ivano-Frankivsk
+                    SpecialOffers = SpecialOfferEnum.SpecialDiscount,
+                    Instances = new List<TourInstance>
+                    {
+                        new TourInstance
+                        {
+                            StartDate = DateTime.UtcNow.AddDays(30),
+                            EndDate = DateTime.UtcNow.AddDays(40),
+                            IsCancelled = false,
+                            MaxParticipants = 8
+                        }
+                    }
+                },
+                new Tour
+                {
+                    Title = "Black Sea Rehabilitation Program",
+                    Description = "A comprehensive rehabilitation program for soldiers at the Black Sea coast. Combines physical therapy, psychological support, and recreational activities in a peaceful environment.",
+                    Price = 2500,
+                    DurationDays = 14,
+                    WithGuide = true,
+                    Classification = TourClassificationEnum.Private,
+                    TourType = TourTypeEnum.Recovery,
+                    ImageUrl = "https://images.unsplash.com/photo-1598887141928-7c4c472b8b8b",
+                    GuideId = guide.Id,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    Locations = new List<int> { 15 }, // Odesa
+                    SpecialOffers = SpecialOfferEnum.SpecialDiscount,
+                    Instances = new List<TourInstance>
+                    {
+                        new TourInstance
+                        {
+                            StartDate = DateTime.UtcNow.AddDays(45),
+                            EndDate = DateTime.UtcNow.AddDays(59),
+                            IsCancelled = false,
+                            MaxParticipants = 6
+                        }
+                    }
+                },
+                new Tour
+                {
+                    Title = "Kyiv Wellness & Recovery",
+                    Description = "A specialized wellness program for soldiers in Kyiv. Features modern rehabilitation facilities, professional medical support, and cultural activities for holistic recovery.",
+                    Price = 1800,
+                    DurationDays = 7,
+                    WithGuide = true,
+                    Classification = TourClassificationEnum.Private,
+                    TourType = TourTypeEnum.Recovery,
+                    ImageUrl = "https://images.unsplash.com/photo-1598887141928-7c4c472b8b8b",
+                    GuideId = guide.Id,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    Locations = new List<int> { 14 }, // Kyiv
+                    SpecialOffers = SpecialOfferEnum.SpecialDiscount,
+                    Instances = new List<TourInstance>
+                    {
+                        new TourInstance
+                        {
+                            StartDate = DateTime.UtcNow.AddDays(20),
+                            EndDate = DateTime.UtcNow.AddDays(27),
+                            IsCancelled = false,
+                            MaxParticipants = 10
+                        }
+                    }
                 }
             };
 
@@ -235,6 +391,54 @@ public class SqlContext : DbContext
                     Rate = 45, // 4.5 stars
                     TouristCommentary = "Excellent chocolate tasting and historical sites!",
                     RatedTimeUtc = DateTime.UtcNow.AddDays(-7),
+                    TouristAccountId = 1
+                },
+                new TourInstanceRate
+                {
+                    TourInstanceId = 5, // Carpathian Mountains Adventure
+                    Rate = 48,
+                    TouristCommentary = "Amazing experience in the Carpathians! The nature is breathtaking and the local culture is fascinating.",
+                    RatedTimeUtc = DateTime.UtcNow.AddDays(-10),
+                    TouristAccountId = 1
+                },
+                new TourInstanceRate
+                {
+                    TourInstanceId = 6, // Kyiv Cultural Heritage Tour
+                    Rate = 45,
+                    TouristCommentary = "Great tour of Kyiv's historical sites. The guide was very knowledgeable about Ukrainian history.",
+                    RatedTimeUtc = DateTime.UtcNow.AddDays(-8),
+                    TouristAccountId = 1
+                },
+                new TourInstanceRate
+                {
+                    TourInstanceId = 7, // Odesa Black Sea Retreat
+                    Rate = 47,
+                    TouristCommentary = "Perfect combination of relaxation and cultural experiences. The beaches are beautiful!",
+                    RatedTimeUtc = DateTime.UtcNow.AddDays(-6),
+                    TouristAccountId = 1
+                },
+                new TourInstanceRate
+                {
+                    TourInstanceId = 8, // Carpathian Recovery Retreat
+                    Rate = 50,
+                    TouristCommentary = "Life-changing experience. The program helped me recover both physically and mentally. The staff was incredibly supportive.",
+                    RatedTimeUtc = DateTime.UtcNow.AddDays(-15),
+                    TouristAccountId = 1
+                },
+                new TourInstanceRate
+                {
+                    TourInstanceId = 9, // Black Sea Rehabilitation Program
+                    Rate = 49,
+                    TouristCommentary = "Excellent rehabilitation program. The combination of therapy and peaceful environment was perfect for recovery.",
+                    RatedTimeUtc = DateTime.UtcNow.AddDays(-12),
+                    TouristAccountId = 1
+                },
+                new TourInstanceRate
+                {
+                    TourInstanceId = 10, // Kyiv Wellness & Recovery
+                    Rate = 48,
+                    TouristCommentary = "Professional and caring staff. The facilities are modern and the program is well-structured.",
+                    RatedTimeUtc = DateTime.UtcNow.AddDays(-9),
                     TouristAccountId = 1
                 }
             };

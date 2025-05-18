@@ -12,7 +12,6 @@ public class TourFiltersDto
     public bool? PrivateTour { get; set; }
     public bool? GroupTour { get; set; }
     public IEnumerable<TourTypeEnum>? TourTypes { get; set; }
-    public double MinRating { get; set; }
     public DestinationCountEnum? DestinationsCount { get; set; }
     public int? SelectedDestination { get; set; }
     public bool? OnSale { get; set; }

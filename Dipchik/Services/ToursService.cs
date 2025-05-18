@@ -43,7 +43,7 @@ public class ToursService
             .ThenInclude(x => x.Account)
             .AsQueryable();
 
-        if (filters.SelectedDestination.HasValue)
+        if (filters.SelectedDestination.HasValue && filters.SelectedDestination > 0)
         {
             query = query.Where(t => t.Tour.Locations.Contains(filters.SelectedDestination.Value));
         }
@@ -112,11 +112,6 @@ public class ToursService
 
         query = query.Where(i => i.Tour.DurationDays >= filters.FromDurationDays);
         query = query.Where(i => i.Tour.DurationDays <= filters.ToDurationDays);
-
-        if (filters.MinRating > 1.0d)
-        {
-            query = query.Where(i => i.Rating >= filters.MinRating);
-        }
 
         if (filters.StartsSoon.HasValue && filters.StartsSoon.Value)
         {

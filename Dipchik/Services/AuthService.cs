@@ -13,11 +13,11 @@ public class AuthService
     private readonly SqlContext dbContext;
     private readonly HttpContext httpContext;
 
-    public AuthService(ILoggerFactory loggerFactory, SqlContext dbContext, HttpContext httpContext)
+    public AuthService(ILoggerFactory loggerFactory, SqlContext dbContext, IHttpContextAccessor httpContextAccessor)
     {
         logger = loggerFactory.CreateLogger<AuthService>();
         this.dbContext = dbContext;
-        this.httpContext = httpContext;
+        this.httpContext = httpContextAccessor.HttpContext;
     }
 
     private async Task<OperationResult<Account>> GetExistingUser(string login)
