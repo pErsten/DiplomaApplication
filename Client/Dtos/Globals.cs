@@ -12,7 +12,7 @@ public class Globals
 
     public void Notify() => OnChange?.Invoke();
 
-    public bool IsLoggedIn => User is not null || !string.IsNullOrEmpty(Token);
+    public bool IsLoggedIn => User is not null && !string.IsNullOrEmpty(Token);
     public AccountInfoDto? User { get; private set; } = null;
     public string? Token { get; set; } = null;
     public Dictionary<string, string> Localizations { get; set; } = null!;

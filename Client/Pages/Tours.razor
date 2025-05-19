@@ -153,41 +153,44 @@
             </MudPaper>
         </div>
     </div>
-
+    
     <!-- Featured Tours -->
-    <MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
-        <MudText Typo="Typo.h5" Class="mb-4">@globals.Localizations["Tours_FeaturedTours"]</MudText>
-        @if (IsLoadingRecommendations)
-        {
-            <MudProgressCircular Indeterminate Color="Color.Primary" />
-        }
-        else if (RecommendedTours.Any())
-        {
-            <MudGrid GutterSize="3">
-                @foreach (var tour in RecommendedTours)
-                {
-                    <MudItem xs="12" sm="6" md="4">
-                        @TourInstanceCard(tour)
-                    </MudItem>
-                }
-            </MudGrid>
-            @if (!string.IsNullOrEmpty(RecommendationReason))
+    @if (globals.IsLoggedIn)
+    {
+        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
+            <MudText Typo="Typo.h5" Class="mb-4">@globals.Localizations["Tours_FeaturedTours"]</MudText>
+            @if (IsLoadingRecommendations)
             {
-                <MudText Typo="Typo.body2" Class="mt-2 text-muted">@RecommendationReason</MudText>
+                <MudProgressCircular Indeterminate Color="Color.Primary" />
             }
-        }
-        else
-        {
-            <MudGrid GutterSize="3">
-                @foreach (var tour in AllTours.Take(3))
+            else if (RecommendedTours.Any())
+            {
+                <MudGrid GutterSize="3">
+                    @foreach (var tour in RecommendedTours)
+                    {
+                        <MudItem xs="12" sm="6" md="4">
+                            @TourInstanceCard(tour)
+                        </MudItem>
+                    }
+                </MudGrid>
+                @if (!string.IsNullOrEmpty(RecommendationReason))
                 {
-                    <MudItem xs="12" sm="6" md="4">
-                        @TourInstanceCard(tour)
-                    </MudItem>
+                    <MudText Typo="Typo.body2" Class="mt-2 text-muted">@RecommendationReason</MudText>
                 }
-            </MudGrid>
-        }
-    </MudContainer>
+            }
+            else
+            {
+                <MudGrid GutterSize="3">
+                    @foreach (var tour in AllTours.Take(3))
+                    {
+                        <MudItem xs="12" sm="6" md="4">
+                            @TourInstanceCard(tour)
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+        </MudContainer>
+    }
 </MudContainer>
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">

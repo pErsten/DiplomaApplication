@@ -29,6 +29,7 @@
                         <MudTh><MudTableSortLabel SortBy="new Func<TourDto, object>(x=>x.Classification)">Classification</MudTableSortLabel></MudTh>
                         <MudTh>Locations</MudTh>
                         <MudTh>Status</MudTh>
+                        <MudTh>Instances</MudTh>
                         <MudTh>Actions</MudTh>
                     </HeaderContent>
                     <RowTemplate>
@@ -40,11 +41,17 @@
                         <MudTd DataLabel="Locations">
                             @string.Join(", ", context.Locations.Select(l => globals.LocaleLocalizations[l].City))
                         </MudTd>
+                        <MudTd DataLabel="Instances">
+                            @GetTourInstanceCount(context.Id)
+                        </MudTd>
                         <MudTd>
                             <MudStack Row="true" Spacing="2">
                                 <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OpenEditTourDialog(context))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => DeleteTour(context))" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="@(() => OpenCreateInstanceDialog(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                             OnClick="@(() => DeleteTour(context))"
+                                             Disabled="@(HasTourInstances(context.Id))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Add" 
+                                             OnClick="@(() => OpenCreateInstanceDialog(context))" />
                             </MudStack>
                         </MudTd>
                     </RowTemplate>
@@ -77,7 +84,7 @@
                         </MudTd>
                         <MudTd>
                             <MudStack Row="true" Spacing="2">
-                                @if (context.Status == TourInstanceStatus.Scheduled || context.Status == TourInstanceStatus.FullyBooked || context.Status == TourInstanceStatus.Cancelled)
+                                @if (context.Status == TourInstanceStatus.Scheduled || context.Status == TourInstanceStatus.Cancelled)
                                 {
                                     <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => OpenEditInstanceDialog(context))" />
                                     <MudIconButton Icon="@Icons.Material.Filled.Cancel" OnClick="@(() => CancelInstance(context))" />
@@ -175,11 +182,20 @@
     public static Color GetStatusColor(TourInstanceStatus status) => status switch
     {
         TourInstanceStatus.Scheduled => Color.Info,
-        TourInstanceStatus.FullyBooked => Color.Warning,
         TourInstanceStatus.Cancelled => Color.Error,
         TourInstanceStatus.Completed => Color.Success,
         _ => Color.Default
     };
+
+    private int GetTourInstanceCount(int tourId)
+    {
+        return TourInstances.Count(i => i.TourId == tourId);
+    }
+
+    private bool HasTourInstances(int tourId)
+    {
+        return TourInstances.Any(i => i.TourId == tourId);
+    }
 
     private async Task OpenCreateTourDialog()
     {
@@ -219,7 +235,16 @@
     {
         var parameters = new DialogParameters
         {
-            ["Tour"] = tour,
+            ["Instance"] = new TourDescDto 
+            { 
+                TourId = tour.Id,
+                Title = tour.Title,
+                StartDate = DateTime.Today.AddDays(1),
+                EndDate = DateTime.Today.AddDays(1 + tour.DurationDays),
+                MaxParticipants = 20,
+                Price = tour.Price,
+                IsCancelled = false
+            },
             ["IsNew"] = true
         };
 
@@ -251,6 +276,12 @@
 
     private async Task DeleteTour(TourDto tour)
     {
+        if (TourInstances.Any(i => i.TourId == tour.Id))
+        {
+            Snackbar.Add(globals.Localizations["Messages_CannotDeleteTourWithInstances"], Severity.Warning);
+            return;
+        }
+
         var parameters = new DialogParameters
         {
             ["ContentText"] = $"Are you sure you want to delete the tour '{tour.Title}'?",
@@ -265,13 +296,24 @@
         {
             try
             {
-                await Http.DeleteAsync($"api/tour/{tour.Id}");
+                var serverUrl = Configuration.GetValue<string>("ServerUrl");
+                using (var cli = new HttpClient())
+                {
+                    cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globals.Token);
+                    var response = await cli.DeleteAsync($"{serverUrl}/Guide/DeleteTour/{tour.Id}");
+                    var res = await response.Content.ReadAsStringAsync();
+                    if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                    {
+                        Snackbar.Add($"{@globals.Localizations["Messages_FailedToDelete"]} - {res}", Severity.Error);
+                        return;
+                    }
+                }
                 await LoadData();
-                Snackbar.Add("Tour deleted successfully", Severity.Success);
+                Snackbar.Add(globals.Localizations["Messages_TourDeleted"], Severity.Success);
             }
             catch (Exception ex)
             {
-                Snackbar.Add("Error deleting tour", Severity.Error);
+                Snackbar.Add(globals.Localizations["Messages_FailedToDelete"], Severity.Error);
             }
         }
     }
